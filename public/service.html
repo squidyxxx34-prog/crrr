@@ -5,235 +5,406 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#0a0a0a" />
-  <title>PitWall AI</title>
+  <meta name="theme-color" content="#080808" />
+  <title>PitWall AI — Sign In</title>
   <link rel="manifest" href="/manifest.json" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500&display=swap');
     :root {
-      --red: #e8001d; --red-dim: #8b0011;
-      --bg: #080808; --bg2: #111111; --bg3: #1a1a1a;
-      --border: #2a2a2a; --text: #f0f0f0; --text-dim: #666;
-      --green: #00e87a; --amber: #ffb800;
-      --mono: 'Share Tech Mono', monospace;
-      --display: 'Rajdhani', sans-serif;
-      --body: 'Barlow', sans-serif;
+      --red:#e8001d; --red-dim:#8b0011; --red-glow:rgba(232,0,29,0.15);
+      --bg:#080808; --bg2:#0f0f0f; --bg3:#161616; --bg4:#1c1c1c;
+      --border:#222; --border2:#2e2e2e;
+      --text:#f2f2f2; --dim:#555; --dim2:#888;
+      --green:#00e87a; --amber:#ffb800; --blue:#4f8ef7;
+      --solana:#9945ff; --eth:#627eea;
+      --mono:'Share Tech Mono',monospace;
+      --display:'Rajdhani',sans-serif;
+      --body:'Barlow',sans-serif;
     }
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--bg); color: var(--text); font-family: var(--body); min-height: 100dvh; overflow-x: hidden; }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html{height:100%}
+    body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100dvh;overflow-x:hidden;display:flex;flex-direction:column}
 
-    .screen { display: none; min-height: 100dvh; flex-direction: column; }
-    .screen.active { display: flex; }
+    /* SCREENS */
+    .screen{display:none;flex:1;flex-direction:column}
+    .screen.active{display:flex}
 
-    /* ── AUTH SCREEN ── */
-    #auth {
-      align-items: center; justify-content: center;
-      padding: 40px 24px;
-      background: var(--bg);
+    /* ════════════════════════════════
+       AUTH SCREEN
+    ════════════════════════════════ */
+    #auth{
+      align-items:center;justify-content:center;
+      padding:24px;
+      position:relative;overflow:hidden;
+      background:var(--bg);
     }
-    .auth-box {
-      width: 100%; max-width: 380px;
-      display: flex; flex-direction: column; gap: 24px;
-    }
-    .auth-logo {
-      font-family: var(--display); font-size: 32px; letter-spacing: 4px;
-      text-align: center; margin-bottom: 8px;
-    }
-    .auth-logo span { color: var(--red); }
-    .auth-title {
-      font-family: var(--display); font-size: 22px; letter-spacing: 2px;
-      text-align: center; color: var(--text-dim);
-    }
-    .auth-tabs {
-      display: grid; grid-template-columns: 1fr 1fr;
-      border: 1px solid var(--border); border-radius: 4px; overflow: hidden;
-    }
-    .auth-tab {
-      padding: 12px; background: var(--bg3);
-      font-family: var(--mono); font-size: 11px; letter-spacing: 2px;
-      text-align: center; cursor: pointer; color: var(--text-dim);
-      border: none; transition: all 0.15s;
-    }
-    .auth-tab.active { background: var(--red); color: white; }
-    .field-group { display: flex; flex-direction: column; gap: 8px; }
-    .field-label { font-family: var(--mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); }
-    .field-input {
-      background: var(--bg3); border: 1px solid var(--border); border-radius: 4px;
-      padding: 14px 16px; font-family: var(--mono); font-size: 16px; color: var(--text);
-      width: 100%; outline: none; transition: border-color 0.2s;
-    }
-    .field-input:focus { border-color: var(--red); }
-    .auth-btn {
-      background: var(--red); border: none; border-radius: 4px; padding: 16px;
-      font-family: var(--display); font-size: 16px; font-weight: 700; letter-spacing: 3px;
-      color: white; width: 100%; cursor: pointer; transition: all 0.15s;
-    }
-    .auth-btn:active { transform: scale(0.98); }
-    .auth-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .auth-msg { font-size: 13px; text-align: center; padding: 10px; border-radius: 4px; display: none; }
-    .auth-msg.error { background: #1a0005; color: var(--red); display: block; }
-    .auth-msg.success { background: #001a0a; color: var(--green); display: block; }
-    .auth-back { font-size: 12px; color: var(--text-dim); text-align: center; }
-    .auth-back a { color: var(--red); text-decoration: none; }
 
-    /* ── PLAN GATE SCREEN ── */
-    #gate {
-      align-items: center; justify-content: center;
-      padding: 40px 24px; background: var(--bg);
+    /* animated bg grid */
+    #auth::before{
+      content:'';position:absolute;inset:0;
+      background-image:
+        linear-gradient(rgba(232,0,29,0.03) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(232,0,29,0.03) 1px,transparent 1px);
+      background-size:48px 48px;
+      animation:gridMove 20s linear infinite;
     }
-    .gate-box {
-      width: 100%; max-width: 380px;
-      display: flex; flex-direction: column; gap: 20px; text-align: center;
-    }
-    .gate-icon { font-size: 48px; }
-    .gate-title { font-family: var(--display); font-size: 28px; letter-spacing: 2px; }
-    .gate-desc { color: var(--text-dim); font-size: 14px; line-height: 1.7; }
-    .gate-plans { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
-    .gate-plan-btn {
-      display: block; padding: 16px; border-radius: 4px;
-      font-family: var(--display); font-size: 16px; letter-spacing: 2px;
-      text-decoration: none; text-align: center; transition: all 0.15s;
-    }
-    .gate-plan-btn.pro { background: var(--red); color: white; }
-    .gate-plan-btn.team { background: var(--bg3); border: 1px solid var(--border); color: var(--text-dim); }
-    .gate-plan-btn:hover { opacity: 0.85; }
-    .gate-free-note { font-size: 11px; color: var(--text-dim); letter-spacing: 1px; }
-    .gate-free-note a { color: var(--red); text-decoration: none; cursor: pointer; }
-    .gate-signout { font-size: 11px; color: var(--text-dim); margin-top: 8px; cursor: pointer; }
-    .gate-signout:hover { color: var(--text); }
+    @keyframes gridMove{from{background-position:0 0}to{background-position:48px 48px}}
 
-    /* ── SETUP SCREEN ── */
-    #setup { padding: 0; background: var(--bg); position: relative; overflow: hidden; }
-    .setup-header { padding: 52px 32px 28px; position: relative; z-index: 2; }
-    .logo { font-family: var(--display); font-size: 13px; font-weight: 600; letter-spacing: 4px; text-transform: uppercase; color: var(--red); margin-bottom: 32px; }
-    .logo a { color: inherit; text-decoration: none; }
-    .user-badge {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 20px;
+    /* red glow top */
+    #auth::after{
+      content:'';position:absolute;top:-200px;left:50%;transform:translateX(-50%);
+      width:600px;height:400px;
+      background:radial-gradient(ellipse,rgba(232,0,29,0.12) 0%,transparent 70%);
+      pointer-events:none;
     }
-    .user-email { font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
-    .plan-pill {
-      font-family: var(--mono); font-size: 9px; letter-spacing: 2px;
-      padding: 4px 10px; border-radius: 2px; text-transform: uppercase;
+
+    .auth-card{
+      position:relative;z-index:1;
+      width:100%;max-width:400px;
+      background:var(--bg2);
+      border:1px solid var(--border2);
+      border-radius:8px;
+      overflow:hidden;
+      box-shadow:0 32px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.03);
     }
-    .plan-pill.free { background: var(--bg3); color: var(--text-dim); border: 1px solid var(--border); }
-    .plan-pill.pro { background: rgba(232,0,29,0.15); color: var(--red); }
-    .plan-pill.team { background: rgba(0,232,122,0.1); color: var(--green); }
-    .setup-title { font-family: var(--display); font-size: clamp(36px,10vw,52px); font-weight: 700; line-height: 1; letter-spacing: -1px; }
-    .setup-title span { color: var(--red); }
-    .setup-subtitle { font-size: 14px; color: var(--text-dim); margin-top: 10px; font-weight: 300; }
-    .sessions-left { font-family: var(--mono); font-size: 11px; color: var(--amber); margin-top: 6px; }
-    .diagonal-line { position: absolute; top: 0; right: -40px; width: 2px; height: 100%; background: linear-gradient(to bottom, transparent, var(--red), transparent); transform: rotate(15deg); opacity: 0.3; }
-    .setup-body { flex: 1; padding: 0 32px 40px; display: flex; flex-direction: column; gap: 24px; position: relative; z-index: 2; }
-    .sim-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .sim-btn { background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 16px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: all 0.15s; font-family: var(--display); font-size: 13px; font-weight: 600; letter-spacing: 1px; color: var(--text-dim); }
-    .sim-btn .sim-icon { font-size: 24px; }
-    .sim-btn.selected { border-color: var(--red); color: var(--text); background: #1a0005; }
-    .persona-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .persona-btn { background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 14px 12px; cursor: pointer; transition: all 0.15s; text-align: left; }
-    .persona-btn.selected { border-color: var(--red); background: #1a0005; }
-    .persona-name { font-family: var(--display); font-size: 15px; font-weight: 700; letter-spacing: 1px; }
-    .persona-desc { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
-    .connect-btn { background: var(--red); border: none; border-radius: 4px; padding: 20px; font-family: var(--display); font-size: 18px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: white; width: 100%; cursor: pointer; margin-top: auto; transition: all 0.15s; }
-    .connect-btn:active { transform: scale(0.98); background: var(--red-dim); }
-    .connect-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .error-msg { background: #1a0005; border: 1px solid var(--red-dim); border-radius: 4px; padding: 12px 16px; font-size: 13px; color: var(--red); text-align: center; display: none; }
-    .error-msg.show { display: block; }
-    .signout-link { font-size: 11px; color: var(--text-dim); text-align: center; cursor: pointer; }
-    .signout-link:hover { color: var(--text); }
 
-    /* ── RACE SCREEN ── */
-    #race { background: var(--bg); display: flex; flex-direction: column; }
-    .race-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--bg2); }
-    .race-status { display: flex; align-items: center; gap: 8px; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-    .status-label { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--text-dim); }
-    .engineer-badge { font-family: var(--display); font-size: 13px; font-weight: 600; letter-spacing: 2px; color: var(--red); }
-    .end-btn { background: transparent; border: 1px solid var(--border); border-radius: 3px; padding: 8px 14px; font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--text-dim); cursor: pointer; }
-    .telem-strip { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--border); }
-    .telem-cell { padding: 12px 10px; border-right: 1px solid var(--border); text-align: center; }
-    .telem-cell:last-child { border-right: none; }
-    .telem-val { font-family: var(--mono); font-size: 18px; color: var(--text); }
-    .telem-val.warn { color: var(--amber); }
-    .telem-val.danger { color: var(--red); }
-    .telem-val.good { color: var(--green); }
-    .telem-key { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim); margin-top: 3px; }
-    .messages-area { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-    .msg { display: flex; gap: 10px; align-items: flex-start; animation: fadeUp 0.3s ease; }
-    @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-    .msg-icon { width: 28px; height: 28px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 2px; }
-    .msg-icon.engineer { background: var(--red); }
-    .msg-icon.system { background: var(--bg3); border: 1px solid var(--border); }
-    .msg-content { flex: 1; }
-    .msg-sender { font-family: var(--mono); font-size: 9px; letter-spacing: 2px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
-    .msg-text { font-size: 15px; line-height: 1.5; color: var(--text); }
-    .msg-time { font-family: var(--mono); font-size: 9px; color: var(--text-dim); margin-top: 4px; }
-    .speaking-bar { padding: 12px 20px; background: var(--bg2); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; min-height: 56px; }
-    .wave { display: flex; align-items: center; gap: 3px; opacity: 0; transition: opacity 0.3s; }
-    .wave.active { opacity: 1; }
-    .wave-bar { width: 3px; background: var(--red); border-radius: 2px; animation: wave 0.8s ease-in-out infinite; }
-    .wave-bar:nth-child(1){height:8px;animation-delay:0s} .wave-bar:nth-child(2){height:16px;animation-delay:0.1s} .wave-bar:nth-child(3){height:24px;animation-delay:0.2s} .wave-bar:nth-child(4){height:16px;animation-delay:0.3s} .wave-bar:nth-child(5){height:8px;animation-delay:0.4s}
-    @keyframes wave { 0%,100%{transform:scaleY(0.5)} 50%{transform:scaleY(1)} }
-    .speaking-text { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; color: var(--text-dim); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .question-area { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 10px; background: var(--bg); }
-    .question-input { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 12px 14px; font-family: var(--body); font-size: 14px; color: var(--text); outline: none; }
-    .question-input:focus { border-color: var(--red); }
-    .question-input::placeholder { color: var(--text-dim); }
-    .ask-btn { background: var(--red); border: none; border-radius: 4px; padding: 12px 16px; color: white; font-size: 18px; cursor: pointer; }
+    /* top red bar */
+    .auth-topbar{
+      height:3px;
+      background:linear-gradient(90deg,var(--red),#ff6b35,var(--red));
+      background-size:200% 100%;
+      animation:shimmer 3s ease-in-out infinite;
+    }
+    @keyframes shimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 
-    /* ── CONNECTING OVERLAY ── */
-    #connecting { position: fixed; inset: 0; background: var(--bg); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 24px; z-index: 100; }
-    #connecting.active { display: flex; }
-    .spinner { width: 48px; height: 48px; border: 2px solid var(--border); border-top-color: var(--red); border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to{transform:rotate(360deg)} }
-    .connecting-text { font-family: var(--mono); font-size: 12px; letter-spacing: 3px; color: var(--text-dim); text-transform: uppercase; }
+    .auth-inner{padding:36px 32px 32px}
+
+    .auth-logo{
+      font-family:var(--display);font-size:28px;letter-spacing:4px;
+      text-align:center;margin-bottom:4px;
+    }
+    .auth-logo span{color:var(--red)}
+
+    .auth-tagline{
+      font-family:var(--mono);font-size:10px;letter-spacing:3px;
+      color:var(--dim2);text-align:center;text-transform:uppercase;
+      margin-bottom:32px;
+    }
+
+    /* tabs */
+    .auth-tabs{
+      display:grid;grid-template-columns:1fr 1fr;
+      background:var(--bg3);border-radius:6px;padding:4px;gap:4px;
+      margin-bottom:28px;
+    }
+    .auth-tab{
+      padding:10px;border:none;border-radius:4px;
+      font-family:var(--mono);font-size:11px;letter-spacing:2px;
+      color:var(--dim2);background:transparent;cursor:pointer;
+      transition:all 0.2s;
+    }
+    .auth-tab.active{background:var(--red);color:#fff;box-shadow:0 2px 12px rgba(232,0,29,0.3)}
+
+    /* fields */
+    .field{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
+    .field-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--dim2)}
+    .field-input{
+      background:var(--bg3);border:1px solid var(--border2);border-radius:5px;
+      padding:13px 14px;font-family:var(--mono);font-size:15px;color:var(--text);
+      width:100%;outline:none;transition:border-color 0.2s,box-shadow 0.2s;
+      letter-spacing:1px;
+    }
+    .field-input:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-glow)}
+    .field-input::placeholder{color:var(--dim);font-size:13px}
+
+    /* primary btn */
+    .btn-main{
+      width:100%;padding:15px;border:none;border-radius:5px;
+      background:var(--red);color:#fff;
+      font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:3px;
+      cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;
+      margin-top:4px;
+    }
+    .btn-main::after{
+      content:'';position:absolute;inset:0;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent);
+      transform:translateX(-100%);transition:transform 0.4s;
+    }
+    .btn-main:hover::after{transform:translateX(100%)}
+    .btn-main:hover{background:#ff1f3a;box-shadow:0 4px 20px rgba(232,0,29,0.35)}
+    .btn-main:active{transform:scale(0.98)}
+    .btn-main:disabled{opacity:0.4;cursor:not-allowed}
+    .btn-main.loading{color:transparent}
+    .btn-main.loading::before{
+      content:'';position:absolute;top:50%;left:50%;
+      width:18px;height:18px;margin:-9px 0 0 -9px;
+      border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;
+      border-radius:50%;animation:spin 0.7s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* divider */
+    .or-divider{
+      display:flex;align-items:center;gap:12px;
+      margin:20px 0;
+    }
+    .or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:var(--border2)}
+    .or-divider span{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--dim)}
+
+    /* social btns */
+    .social-grid{display:flex;flex-direction:column;gap:10px}
+
+    .btn-social{
+      width:100%;padding:13px 16px;border-radius:5px;border:1px solid var(--border2);
+      background:var(--bg3);color:var(--text);
+      font-family:var(--body);font-size:14px;font-weight:500;
+      cursor:pointer;transition:all 0.2s;
+      display:flex;align-items:center;justify-content:center;gap:10px;
+    }
+    .btn-social:hover{border-color:#444;background:var(--bg4);transform:translateY(-1px)}
+    .btn-social:active{transform:scale(0.98)}
+    .btn-social svg{width:18px;height:18px;flex-shrink:0}
+
+    /* wallet row */
+    .wallet-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+    .btn-wallet{
+      padding:13px 10px;border-radius:5px;border:1px solid var(--border2);
+      background:var(--bg3);color:var(--text);
+      font-family:var(--mono);font-size:11px;letter-spacing:1px;
+      cursor:pointer;transition:all 0.2s;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .btn-wallet:hover{transform:translateY(-1px)}
+    .btn-wallet:active{transform:scale(0.98)}
+    .btn-wallet.sol{border-color:rgba(153,69,255,0.3)}
+    .btn-wallet.sol:hover{border-color:var(--solana);background:rgba(153,69,255,0.08);box-shadow:0 0 16px rgba(153,69,255,0.15)}
+    .btn-wallet.eth{border-color:rgba(98,126,234,0.3)}
+    .btn-wallet.eth:hover{border-color:var(--eth);background:rgba(98,126,234,0.08);box-shadow:0 0 16px rgba(98,126,234,0.15)}
+    .btn-wallet .wallet-dot{width:8px;height:8px;border-radius:50%}
+    .btn-wallet.sol .wallet-dot{background:var(--solana)}
+    .btn-wallet.eth .wallet-dot{background:var(--eth)}
+
+    /* message */
+    .auth-msg{
+      padding:11px 14px;border-radius:5px;font-size:13px;
+      line-height:1.5;margin-top:4px;display:none;
+    }
+    .auth-msg.error{background:rgba(232,0,29,0.08);border:1px solid rgba(232,0,29,0.2);color:#ff6b6b;display:block}
+    .auth-msg.success{background:rgba(0,232,122,0.08);border:1px solid rgba(0,232,122,0.2);color:var(--green);display:block}
+    .auth-msg.info{background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);color:var(--blue);display:block}
+
+    .auth-footer{
+      padding:16px 32px 20px;
+      border-top:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;gap:4px;
+      font-size:12px;color:var(--dim2);
+    }
+    .auth-footer a{color:var(--dim2);text-decoration:none;transition:color 0.2s}
+    .auth-footer a:hover{color:var(--text)}
+
+    /* wallet status toast */
+    .wallet-toast{
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+      background:var(--bg3);border:1px solid var(--border2);border-radius:6px;
+      padding:12px 20px;font-family:var(--mono);font-size:12px;letter-spacing:1px;
+      color:var(--text);white-space:nowrap;z-index:999;
+      opacity:0;transition:opacity 0.3s;pointer-events:none;
+    }
+    .wallet-toast.show{opacity:1}
+
+    /* ════════════════════════════════
+       GATE SCREEN
+    ════════════════════════════════ */
+    #gate{align-items:center;justify-content:center;padding:40px 24px;background:var(--bg)}
+    .gate-box{width:100%;max-width:380px;display:flex;flex-direction:column;gap:20px;text-align:center}
+    .gate-icon{font-size:48px}
+    .gate-title{font-family:var(--display);font-size:28px;letter-spacing:2px}
+    .gate-desc{color:var(--dim2);font-size:14px;line-height:1.7}
+    .gate-plans{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+    .gate-plan-btn{display:block;padding:16px;border-radius:4px;font-family:var(--display);font-size:16px;letter-spacing:2px;text-decoration:none;text-align:center;transition:all 0.15s}
+    .gate-plan-btn.pro{background:var(--red);color:white}
+    .gate-plan-btn.team{background:var(--bg3);border:1px solid var(--border);color:var(--dim2)}
+    .gate-free-note{font-size:11px;color:var(--dim2);letter-spacing:1px}
+    .gate-free-note a{color:var(--red);text-decoration:none;cursor:pointer}
+    .gate-signout{font-size:11px;color:var(--dim2);cursor:pointer}
+    .gate-signout:hover{color:var(--text)}
+
+    /* ════════════════════════════════
+       SETUP SCREEN
+    ════════════════════════════════ */
+    #setup{padding:0;background:var(--bg);position:relative;overflow:hidden}
+    .setup-header{padding:52px 32px 28px;position:relative;z-index:2}
+    .logo{font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:var(--red);margin-bottom:32px}
+    .logo a{color:inherit;text-decoration:none}
+    .user-badge{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .user-email{font-family:var(--mono);font-size:11px;color:var(--dim2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .plan-pill{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:4px 10px;border-radius:2px;text-transform:uppercase}
+    .plan-pill.free{background:var(--bg3);color:var(--dim2);border:1px solid var(--border)}
+    .plan-pill.pro{background:rgba(232,0,29,0.15);color:var(--red)}
+    .plan-pill.team{background:rgba(0,232,122,0.1);color:var(--green)}
+    .setup-title{font-family:var(--display);font-size:clamp(36px,10vw,52px);font-weight:700;line-height:1;letter-spacing:-1px}
+    .setup-title span{color:var(--red)}
+    .setup-subtitle{font-size:14px;color:var(--dim2);margin-top:10px;font-weight:300}
+    .sessions-left{font-family:var(--mono);font-size:11px;color:var(--amber);margin-top:6px}
+    .diagonal-line{position:absolute;top:0;right:-40px;width:2px;height:100%;background:linear-gradient(to bottom,transparent,var(--red),transparent);transform:rotate(15deg);opacity:0.3}
+    .setup-body{flex:1;padding:0 32px 40px;display:flex;flex-direction:column;gap:24px;position:relative;z-index:2}
+    .field-group{display:flex;flex-direction:column;gap:8px}
+    .field-label2{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--dim2)}
+    .field-input2{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:14px 16px;font-family:var(--mono);font-size:16px;color:var(--text);width:100%;outline:none;transition:border-color 0.2s;letter-spacing:2px}
+    .field-input2:focus{border-color:var(--red)}
+    .field-input2::placeholder{color:var(--dim);font-size:14px}
+    .sim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .sim-btn{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:16px 8px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:all 0.15s;font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:1px;color:var(--dim2)}
+    .sim-btn .sim-icon{font-size:24px}
+    .sim-btn.selected{border-color:var(--red);color:var(--text);background:#1a0005}
+    .persona-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .persona-btn{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:14px 12px;cursor:pointer;transition:all 0.15s;text-align:left}
+    .persona-btn.selected{border-color:var(--red);background:#1a0005}
+    .persona-name{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:1px}
+    .persona-desc{font-size:11px;color:var(--dim2);margin-top:4px}
+    .connect-btn{background:var(--red);border:none;border-radius:4px;padding:20px;font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:white;width:100%;cursor:pointer;margin-top:auto;transition:all 0.15s}
+    .connect-btn:active{transform:scale(0.98);background:var(--red-dim)}
+    .connect-btn:disabled{opacity:0.4;cursor:not-allowed}
+    .error-msg{background:#1a0005;border:1px solid var(--red-dim);border-radius:4px;padding:12px 16px;font-size:13px;color:var(--red);text-align:center;display:none}
+    .error-msg.show{display:block}
+    .signout-link{font-size:11px;color:var(--dim2);text-align:center;cursor:pointer}
+    .signout-link:hover{color:var(--text)}
+
+    /* ════════════════════════════════
+       RACE SCREEN
+    ════════════════════════════════ */
+    #race{background:var(--bg);display:flex;flex-direction:column}
+    .race-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg2)}
+    .race-status{display:flex;align-items:center;gap:8px}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+    .status-label{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--dim2)}
+    .engineer-badge{font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:2px;color:var(--red)}
+    .end-btn{background:transparent;border:1px solid var(--border);border-radius:3px;padding:8px 14px;font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--dim2);cursor:pointer}
+    .telem-strip{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border)}
+    .telem-cell{padding:12px 10px;border-right:1px solid var(--border);text-align:center}
+    .telem-cell:last-child{border-right:none}
+    .telem-val{font-family:var(--mono);font-size:18px;color:var(--text)}
+    .telem-val.warn{color:var(--amber)}.telem-val.danger{color:var(--red)}.telem-val.good{color:var(--green)}
+    .telem-key{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim2);margin-top:3px}
+    .messages-area{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+    .msg{display:flex;gap:10px;align-items:flex-start;animation:fadeUp 0.3s ease}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .msg-icon{width:28px;height:28px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:2px}
+    .msg-icon.engineer{background:var(--red)}.msg-icon.system{background:var(--bg3);border:1px solid var(--border)}
+    .msg-content{flex:1}
+    .msg-sender{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--dim2);text-transform:uppercase;margin-bottom:4px}
+    .msg-text{font-size:15px;line-height:1.5;color:var(--text)}
+    .msg-time{font-family:var(--mono);font-size:9px;color:var(--dim2);margin-top:4px}
+    .speaking-bar{padding:12px 20px;background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;min-height:56px}
+    .wave{display:flex;align-items:center;gap:3px;opacity:0;transition:opacity 0.3s}
+    .wave.active{opacity:1}
+    .wave-bar{width:3px;background:var(--red);border-radius:2px;animation:wave 0.8s ease-in-out infinite}
+    .wave-bar:nth-child(1){height:8px;animation-delay:0s}.wave-bar:nth-child(2){height:16px;animation-delay:.1s}.wave-bar:nth-child(3){height:24px;animation-delay:.2s}.wave-bar:nth-child(4){height:16px;animation-delay:.3s}.wave-bar:nth-child(5){height:8px;animation-delay:.4s}
+    @keyframes wave{0%,100%{transform:scaleY(0.5)}50%{transform:scaleY(1)}}
+    .speaking-text{font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--dim2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .question-area{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:10px;background:var(--bg)}
+    .question-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:12px 14px;font-family:var(--body);font-size:14px;color:var(--text);outline:none}
+    .question-input:focus{border-color:var(--red)}
+    .question-input::placeholder{color:var(--dim2)}
+    .ask-btn{background:var(--red);border:none;border-radius:4px;padding:12px 16px;color:white;font-size:18px;cursor:pointer}
+
+    /* CONNECTING */
+    #connecting{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:24px;z-index:100}
+    #connecting.active{display:flex}
+    .spinner{width:48px;height:48px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}
+    .connecting-text{font-family:var(--mono);font-size:12px;letter-spacing:3px;color:var(--dim2);text-transform:uppercase}
+
+    /* TOAST */
+    .wallet-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:12px 20px;font-family:var(--mono);font-size:12px;letter-spacing:1px;color:var(--text);white-space:nowrap;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none}
+    .wallet-toast.show{opacity:1}
   </style>
 </head>
 <body>
 
-<!-- AUTH SCREEN -->
+<!-- ═══════════════ AUTH SCREEN ═══════════════ -->
 <div id="auth" class="screen active">
-  <div class="auth-box">
-    <div>
+  <div class="auth-card">
+    <div class="auth-topbar"></div>
+    <div class="auth-inner">
+
       <div class="auth-logo">PITWALL<span>.</span>AI</div>
-      <div class="auth-title">SIGN IN TO RACE</div>
+      <div class="auth-tagline">AI Race Engineer</div>
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">SIGN IN</button>
+        <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">REGISTER</button>
+      </div>
+
+      <!-- Email / Password -->
+      <div class="field">
+        <div class="field-label">Email</div>
+        <input class="field-input" id="authEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+      </div>
+      <div class="field">
+        <div class="field-label">Password</div>
+        <input class="field-input" id="authPassword" type="password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+
+      <div id="authMsg" class="auth-msg"></div>
+
+      <button class="btn-main" id="authBtn" onclick="handleAuth()">SIGN IN →</button>
+
+      <!-- Divider -->
+      <div class="or-divider"><span>OR</span></div>
+
+      <!-- Social -->
+      <div class="social-grid">
+        <button class="btn-social" onclick="signInWithGoogle()">
+          <!-- Google SVG -->
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          Continue with Google
+        </button>
+
+        <!-- Wallets -->
+        <div class="wallet-row">
+          <button class="btn-wallet sol" onclick="signInWithSolana()">
+            <span class="wallet-dot"></span>
+            SOLANA
+          </button>
+          <button class="btn-wallet eth" onclick="signInWithEthereum()">
+            <span class="wallet-dot"></span>
+            ETHEREUM
+          </button>
+        </div>
+      </div>
+
     </div>
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">SIGN IN</button>
-      <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">CREATE ACCOUNT</button>
+    <div class="auth-footer">
+      <a href="/">← Back to home</a>
     </div>
-    <div class="field-group">
-      <div class="field-label">Email</div>
-      <input class="field-input" id="authEmail" type="email" placeholder="you@example.com" autocomplete="email" />
-    </div>
-    <div class="field-group">
-      <div class="field-label">Password</div>
-      <input class="field-input" id="authPassword" type="password" placeholder="••••••••" autocomplete="current-password" />
-    </div>
-    <div id="authMsg" class="auth-msg"></div>
-    <button class="auth-btn" id="authBtn" onclick="handleAuth()">SIGN IN →</button>
-    <div class="auth-back"><a href="/">← Back to home</a></div>
   </div>
 </div>
 
-<!-- PLAN GATE SCREEN -->
+<!-- ═══════════════ GATE SCREEN ═══════════════ -->
 <div id="gate" class="screen">
   <div class="gate-box">
     <div class="gate-icon">🏁</div>
     <div class="gate-title">UPGRADE TO RACE</div>
-    <div class="gate-desc">You've used your 3 free sessions this month. Upgrade to Pro for unlimited access across all sims.</div>
+    <div class="gate-desc">You've used your 3 free sessions this month. Upgrade for unlimited access.</div>
     <div class="gate-plans">
       <a href="https://buy.stripe.com/eVqeVdcgodZ518jaFFes003" class="gate-plan-btn pro">PRO — €12/month →</a>
       <a href="https://buy.stripe.com/9B6bJ15S0f394kv7ttes004" class="gate-plan-btn team">TEAM — €39/month →</a>
     </div>
-    <div class="gate-free-note">Sessions reset on the 1st of each month. <a onclick="showSetup()">Continue anyway →</a></div>
+    <div class="gate-free-note">Sessions reset on the 1st. <a onclick="showSetup()">Continue anyway →</a></div>
     <div class="gate-signout" onclick="signOut()">Sign out</div>
   </div>
 </div>
 
-<!-- SETUP SCREEN -->
+<!-- ═══════════════ SETUP SCREEN ═══════════════ -->
 <div id="setup" class="screen">
   <div class="setup-header">
     <div class="logo"><a href="/">← PitWall AI</a></div>
@@ -248,11 +419,11 @@
   </div>
   <div class="setup-body">
     <div class="field-group">
-      <div class="field-label">Simulator IP Address</div>
-      <input class="field-input" id="ipInput" type="text" inputmode="decimal" placeholder="192.168.1.x" autocomplete="off" spellcheck="false" />
+      <div class="field-label2">Simulator IP Address</div>
+      <input class="field-input2" id="ipInput" type="text" inputmode="decimal" placeholder="192.168.1.x" autocomplete="off" spellcheck="false" />
     </div>
     <div class="field-group">
-      <div class="field-label">Simulator</div>
+      <div class="field-label2">Simulator</div>
       <div class="sim-grid">
         <button class="sim-btn selected" data-sim="lmu" onclick="selectSim(this)"><span class="sim-icon">🏎</span>LMU</button>
         <button class="sim-btn" data-sim="acc" onclick="selectSim(this)"><span class="sim-icon">🏁</span>ACC</button>
@@ -260,7 +431,7 @@
       </div>
     </div>
     <div class="field-group">
-      <div class="field-label">Engineer Persona</div>
+      <div class="field-label2">Engineer Persona</div>
       <div class="persona-grid">
         <button class="persona-btn selected" data-persona="british" onclick="selectPersona(this)"><div class="persona-name">🇬🇧 JAMES</div><div class="persona-desc">Calm. Precise. F1 style.</div></button>
         <button class="persona-btn" data-persona="italian" onclick="selectPersona(this)"><div class="persona-name">🇮🇹 MARCO</div><div class="persona-desc">Passionate. Tactical.</div></button>
@@ -268,25 +439,22 @@
         <button class="persona-btn" data-persona="aussie" onclick="selectPersona(this)"><div class="persona-name">🇦🇺 NICK</div><div class="persona-desc">Direct. No bullshit.</div></button>
       </div>
     </div>
-    <div id="errorMsg" class="error-msg">Cannot connect. Check IP and make sure sim is running.</div>
+    <div id="errorMsg" class="error-msg"></div>
     <button class="connect-btn" id="connectBtn" onclick="startRace()">NEW RACE →</button>
     <div class="signout-link" onclick="signOut()">Sign out</div>
   </div>
 </div>
 
-<!-- CONNECTING OVERLAY -->
+<!-- ═══════════════ CONNECTING ═══════════════ -->
 <div id="connecting">
   <div class="spinner"></div>
-  <div class="connecting-text" id="connectingText">Connecting to sim...</div>
+  <div class="connecting-text">Connecting to sim...</div>
 </div>
 
-<!-- RACE SCREEN -->
+<!-- ═══════════════ RACE SCREEN ═══════════════ -->
 <div id="race" class="screen">
   <div class="race-header">
-    <div class="race-status">
-      <div class="status-dot" id="statusDot"></div>
-      <span class="status-label" id="statusLabel">LIVE</span>
-    </div>
+    <div class="race-status"><div class="status-dot"></div><span class="status-label">LIVE</span></div>
     <div class="engineer-badge" id="engineerBadge">JAMES</div>
     <button class="end-btn" onclick="endRace()">END RACE</button>
   </div>
@@ -301,15 +469,14 @@
       <div class="msg-icon system">📡</div>
       <div class="msg-content">
         <div class="msg-sender">System</div>
-        <div class="msg-text">Engineer connected. Race session active. Monitoring telemetry.</div>
+        <div class="msg-text">Engineer connected. Race session active.</div>
         <div class="msg-time" id="startTime">—</div>
       </div>
     </div>
   </div>
   <div class="speaking-bar">
     <div class="wave" id="waveAnim">
-      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-      <div class="wave-bar"></div><div class="wave-bar"></div>
+      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
     </div>
     <div class="speaking-text" id="speakingText">Engineer standing by...</div>
   </div>
@@ -318,6 +485,8 @@
     <button class="ask-btn" onclick="askQuestion()">↑</button>
   </div>
 </div>
+
+<div class="wallet-toast" id="walletToast"></div>
 
 <script src="/app.js"></script>
 </body>
