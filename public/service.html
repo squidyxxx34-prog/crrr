@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>PitWall AI</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500&display=swap');
+
+    :root {
+      --red: #e8001d;
+      --red-dim: #8b0011;
+      --bg: #080808;
+      --bg2: #111111;
+      --bg3: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #f0f0f0;
+      --text-dim: #666;
+      --green: #00e87a;
+      --amber: #ffb800;
+      --mono: 'Share Tech Mono', monospace;
+      --display: 'Rajdhani', sans-serif;
+      --body: 'Barlow', sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* ── SCREEN SYSTEM ── */
+    .screen { display: none; min-height: 100dvh; flex-direction: column; }
+    .screen.active { display: flex; }
+
+    /* ── SETUP SCREEN ── */
+    #setup {
+      padding: 0;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .setup-header {
+      padding: 60px 32px 32px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .logo {
+      font-family: var(--display);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 40px;
+    }
+
+    .setup-title {
+      font-family: var(--display);
+      font-size: clamp(36px, 10vw, 52px);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+
+    .setup-title span { color: var(--red); }
+
+    .setup-subtitle {
+      font-size: 14px;
+      color: var(--text-dim);
+      margin-top: 12px;
+      font-weight: 300;
+      letter-spacing: 0.5px;
+    }
+
+    .diagonal-line {
+      position: absolute;
+      top: 0; right: -40px;
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(to bottom, transparent, var(--red), transparent);
+      transform: rotate(15deg);
+      opacity: 0.3;
+    }
+
+    .setup-body {
+      flex: 1;
+      padding: 0 32px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .field-group { display: flex; flex-direction: column; gap: 8px; }
+
+    .field-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .field-input {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 16px;
+      font-family: var(--mono);
+      font-size: 18px;
+      color: var(--text);
+      width: 100%;
+      outline: none;
+      transition: border-color 0.2s;
+      letter-spacing: 2px;
+    }
+
+    .field-input:focus { border-color: var(--red); }
+    .field-input::placeholder { color: var(--text-dim); font-size: 14px; letter-spacing: 1px; }
+
+    .sim-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .sim-btn {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 16px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--display);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+    }
+
+    .sim-btn .sim-icon { font-size: 24px; }
+    .sim-btn.selected { border-color: var(--red); color: var(--text); background: #1a0005; }
+
+    .persona-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .persona-btn {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 14px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: left;
+    }
+
+    .persona-btn.selected { border-color: var(--red); background: #1a0005; }
+
+    .persona-name {
+      font-family: var(--display);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .persona-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    .connect-btn {
+      background: var(--red);
+      border: none;
+      border-radius: 4px;
+      padding: 20px;
+      font-family: var(--display);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: white;
+      width: 100%;
+      cursor: pointer;
+      margin-top: auto;
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .connect-btn:active { transform: scale(0.98); background: var(--red-dim); }
+    .connect-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .connect-btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: left 0.4s;
+    }
+
+    .connect-btn:not(:disabled):hover::before { left: 100%; }
+
+    /* ── RACE SCREEN ── */
+    #race {
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .race-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+    }
+
+    .race-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .status-dot.red { background: var(--red); animation: none; }
+
+    .status-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+    }
+
+    .engineer-badge {
+      font-family: var(--display);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      color: var(--red);
+    }
+
+    .end-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 8px 14px;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      cursor: pointer;
+    }
+
+    /* TELEMETRY STRIP */
+    .telem-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .telem-cell {
+      padding: 12px 10px;
+      border-right: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .telem-cell:last-child { border-right: none; }
+
+    .telem-val {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--text);
+    }
+
+    .telem-val.warn { color: var(--amber); }
+    .telem-val.danger { color: var(--red); }
+    .telem-val.good { color: var(--green); }
+
+    .telem-key {
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-top: 3px;
+    }
+
+    /* MESSAGES LOG */
+    .messages-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .msg {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      animation: fadeUp 0.3s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-icon {
+      width: 28px; height: 28px;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .msg-icon.engineer { background: var(--red); }
+    .msg-icon.system { background: var(--bg3); border: 1px solid var(--border); }
+
+    .msg-content { flex: 1; }
+
+    .msg-sender {
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .msg-text {
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    .msg-time {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* SPEAKING INDICATOR */
+    .speaking-bar {
+      padding: 12px 20px;
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 56px;
+    }
+
+    .wave {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .wave.active { opacity: 1; }
+
+    .wave-bar {
+      width: 3px;
+      background: var(--red);
+      border-radius: 2px;
+      animation: wave 0.8s ease-in-out infinite;
+    }
+
+    .wave-bar:nth-child(1) { height: 8px; animation-delay: 0s; }
+    .wave-bar:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+    .wave-bar:nth-child(3) { height: 24px; animation-delay: 0.2s; }
+    .wave-bar:nth-child(4) { height: 16px; animation-delay: 0.3s; }
+    .wave-bar:nth-child(5) { height: 8px; animation-delay: 0.4s; }
+
+    @keyframes wave {
+      0%, 100% { transform: scaleY(0.5); }
+      50% { transform: scaleY(1); }
+    }
+
+    .speaking-text {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* QUESTION INPUT */
+    .question-area {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      background: var(--bg);
+    }
+
+    .question-input {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 12px 14px;
+      font-family: var(--body);
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+    }
+
+    .question-input:focus { border-color: var(--red); }
+    .question-input::placeholder { color: var(--text-dim); }
+
+    .ask-btn {
+      background: var(--red);
+      border: none;
+      border-radius: 4px;
+      padding: 12px 16px;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* CONNECTING OVERLAY */
+    #connecting {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      z-index: 100;
+    }
+
+    #connecting.active { display: flex; }
+
+    .spinner {
+      width: 48px; height: 48px;
+      border: 2px solid var(--border);
+      border-top-color: var(--red);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .connecting-text {
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 3px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .error-msg {
+      background: #1a0005;
+      border: 1px solid var(--red-dim);
+      border-radius: 4px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--red);
+      text-align: center;
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup" class="screen active">
+  <div class="setup-header">
+    <div class="logo"><a href="/" style="color:inherit;text-decoration:none">← PitWall AI</a></div>
+    <h1 class="setup-title">YOUR<br><span>ENGINEER</span><br>IS READY.</h1>
+    <p class="setup-subtitle">Connect your sim. Start racing.</p>
+    <div class="diagonal-line"></div>
+  </div>
+
+  <div class="setup-body">
+
+    <div class="field-group">
+      <div class="field-label">Simulator IP Address</div>
+      <input class="field-input" id="ipInput" type="text"
+        inputmode="decimal" placeholder="192.168.1.x" autocomplete="off" spellcheck="false" />
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Simulator</div>
+      <div class="sim-grid">
+        <button class="sim-btn selected" data-sim="lmu" onclick="selectSim(this)">
+          <span class="sim-icon">🏎</span>LMU
+        </button>
+        <button class="sim-btn" data-sim="acc" onclick="selectSim(this)">
+          <span class="sim-icon">🏁</span>ACC
+        </button>
+        <button class="sim-btn" data-sim="iracing" onclick="selectSim(this)">
+          <span class="sim-icon">⚡</span>iRacing
+        </button>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Engineer Persona</div>
+      <div class="persona-grid">
+        <button class="persona-btn selected" data-persona="british" onclick="selectPersona(this)">
+          <div class="persona-name">🇬🇧 JAMES</div>
+          <div class="persona-desc">Calm. Precise. F1 style.</div>
+        </button>
+        <button class="persona-btn" data-persona="italian" onclick="selectPersona(this)">
+          <div class="persona-name">🇮🇹 MARCO</div>
+          <div class="persona-desc">Passionate. Tactical.</div>
+        </button>
+        <button class="persona-btn" data-persona="german" onclick="selectPersona(this)">
+          <div class="persona-name">🇩🇪 HANS</div>
+          <div class="persona-desc">Technical. Data-driven.</div>
+        </button>
+        <button class="persona-btn" data-persona="aussie" onclick="selectPersona(this)">
+          <div class="persona-name">🇦🇺 NICK</div>
+          <div class="persona-desc">Direct. No bullshit.</div>
+        </button>
+      </div>
+    </div>
+
+    <div id="errorMsg" class="error-msg">Cannot connect. Check IP and make sure sim is running.</div>
+
+    <button class="connect-btn" id="connectBtn" onclick="startRace()">
+      NEW RACE →
+    </button>
+
+  </div>
+</div>
+
+<!-- CONNECTING OVERLAY -->
+<div id="connecting">
+  <div class="spinner"></div>
+  <div class="connecting-text">Connecting to sim...</div>
+</div>
+
+<!-- RACE SCREEN -->
+<div id="race" class="screen">
+  <div class="race-header">
+    <div class="race-status">
+      <div class="status-dot" id="statusDot"></div>
+      <span class="status-label" id="statusLabel">LIVE</span>
+    </div>
+    <div class="engineer-badge" id="engineerBadge">JAMES</div>
+    <button class="end-btn" onclick="endRace()">END RACE</button>
+  </div>
+
+  <div class="telem-strip">
+    <div class="telem-cell">
+      <div class="telem-val" id="telPos">P1</div>
+      <div class="telem-key">POS</div>
+    </div>
+    <div class="telem-cell">
+      <div class="telem-val" id="telFuel">100%</div>
+      <div class="telem-key">FUEL</div>
+    </div>
+    <div class="telem-cell">
+      <div class="telem-val" id="telTyre">OK</div>
+      <div class="telem-key">TYRE</div>
+    </div>
+    <div class="telem-cell">
+      <div class="telem-val" id="telGap">—</div>
+      <div class="telem-key">GAP</div>
+    </div>
+  </div>
+
+  <div class="messages-area" id="messagesArea">
+    <div class="msg">
+      <div class="msg-icon system">📡</div>
+      <div class="msg-content">
+        <div class="msg-sender">System</div>
+        <div class="msg-text">Engineer connected. Race session active. Monitoring telemetry.</div>
+        <div class="msg-time" id="startTime">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="speaking-bar">
+    <div class="wave" id="waveAnim">
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+    </div>
+    <div class="speaking-text" id="speakingText">Engineer standing by...</div>
+  </div>
+
+  <div class="question-area">
+    <input class="question-input" id="questionInput"
+      placeholder="Ask your engineer..." type="text" />
+    <button class="ask-btn" onclick="askQuestion()">↑</button>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

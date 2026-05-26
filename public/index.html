@@ -1,646 +1,760 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#0a0a0a" />
-  <title>PitWall AI</title>
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="apple-touch-icon" href="/icon-192.png" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PitWall AI — Your AI Race Engineer</title>
+  <meta name="description" content="AI race engineer in your ear. Live telemetry. Real strategy. Connect your sim in seconds."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500&display=swap');
-
     :root {
       --red: #e8001d;
-      --red-dim: #8b0011;
+      --red2: #ff1f3a;
       --bg: #080808;
-      --bg2: #111111;
-      --bg3: #1a1a1a;
-      --border: #2a2a2a;
-      --text: #f0f0f0;
-      --text-dim: #666;
+      --bg2: #0f0f0f;
+      --bg3: #161616;
+      --border: #222;
+      --text: #f2f2f2;
+      --dim: #666;
       --green: #00e87a;
-      --amber: #ffb800;
+      --display: 'Bebas Neue', sans-serif;
+      --body: 'DM Sans', sans-serif;
       --mono: 'Share Tech Mono', monospace;
-      --display: 'Rajdhani', sans-serif;
-      --body: 'Barlow', sans-serif;
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
 
     body {
       background: var(--bg);
       color: var(--text);
       font-family: var(--body);
-      min-height: 100dvh;
       overflow-x: hidden;
     }
 
-    /* ── SCREEN SYSTEM ── */
-    .screen { display: none; min-height: 100dvh; flex-direction: column; }
-    .screen.active { display: flex; }
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 40px;
+      background: rgba(8,8,8,0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
 
-    /* ── SETUP SCREEN ── */
-    #setup {
-      padding: 0;
-      background: var(--bg);
+    .nav-logo {
+      font-family: var(--display);
+      font-size: 24px;
+      letter-spacing: 3px;
+      color: var(--text);
+    }
+
+    .nav-logo span { color: var(--red); }
+
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+
+    .nav-links a {
+      font-size: 13px;
+      letter-spacing: 1px;
+      color: var(--dim);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      background: var(--red) !important;
+      color: white !important;
+      padding: 10px 20px;
+      border-radius: 3px;
+      font-weight: 500;
+      font-size: 13px !important;
+      letter-spacing: 1px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 120px 40px 80px;
       position: relative;
       overflow: hidden;
     }
 
-    .setup-header {
-      padding: 60px 32px 32px;
-      position: relative;
-      z-index: 2;
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(232,0,29,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,0,29,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
     }
 
-    .logo {
-      font-family: var(--display);
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: var(--red);
-      margin-bottom: 40px;
-    }
-
-    .setup-title {
-      font-family: var(--display);
-      font-size: clamp(36px, 10vw, 52px);
-      font-weight: 700;
-      line-height: 1;
-      letter-spacing: -1px;
-    }
-
-    .setup-title span { color: var(--red); }
-
-    .setup-subtitle {
-      font-size: 14px;
-      color: var(--text-dim);
-      margin-top: 12px;
-      font-weight: 300;
-      letter-spacing: 0.5px;
-    }
-
-    .diagonal-line {
-      position: absolute;
-      top: 0; right: -40px;
-      width: 2px;
-      height: 100%;
-      background: linear-gradient(to bottom, transparent, var(--red), transparent);
-      transform: rotate(15deg);
-      opacity: 0.3;
-    }
-
-    .setup-body {
-      flex: 1;
-      padding: 0 32px 40px;
-      display: flex;
-      flex-direction: column;
-      gap: 28px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .field-group { display: flex; flex-direction: column; gap: 8px; }
-
-    .field-label {
+    .hero-tag {
       font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--text-dim);
-    }
-
-    .field-input {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 16px;
-      font-family: var(--mono);
-      font-size: 18px;
-      color: var(--text);
-      width: 100%;
-      outline: none;
-      transition: border-color 0.2s;
-      letter-spacing: 2px;
-    }
-
-    .field-input:focus { border-color: var(--red); }
-    .field-input::placeholder { color: var(--text-dim); font-size: 14px; letter-spacing: 1px; }
-
-    .sim-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-
-    .sim-btn {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 16px 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      transition: all 0.15s;
-      font-family: var(--display);
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      color: var(--text-dim);
-    }
-
-    .sim-btn .sim-icon { font-size: 24px; }
-    .sim-btn.selected { border-color: var(--red); color: var(--text); background: #1a0005; }
-
-    .persona-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-
-    .persona-btn {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 14px 12px;
-      cursor: pointer;
-      transition: all 0.15s;
-      text-align: left;
-    }
-
-    .persona-btn.selected { border-color: var(--red); background: #1a0005; }
-
-    .persona-name {
-      font-family: var(--display);
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 1px;
-    }
-
-    .persona-desc {
       font-size: 11px;
-      color: var(--text-dim);
+      letter-spacing: 4px;
+      color: var(--red);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.1s forwards;
+    }
+
+    .hero-title {
+      font-family: var(--display);
+      font-size: clamp(72px, 14vw, 160px);
+      line-height: 0.9;
+      letter-spacing: 2px;
+      position: relative;
+      z-index: 1;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.2s forwards;
+    }
+
+    .hero-title .red { color: var(--red); }
+
+    .hero-title .outline {
+      -webkit-text-stroke: 1px rgba(242,242,242,0.2);
+      color: transparent;
+    }
+
+    .hero-sub {
+      font-size: clamp(16px, 2.5vw, 22px);
+      color: var(--dim);
+      font-weight: 300;
+      max-width: 560px;
+      line-height: 1.6;
+      margin-top: 32px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.35s forwards;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      margin-top: 48px;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.5s forwards;
+    }
+
+    .btn-primary {
+      background: var(--red);
+      color: white;
+      padding: 16px 36px;
+      border-radius: 3px;
+      font-family: var(--body);
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover { background: var(--red2); transform: translateY(-1px); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--dim);
+      padding: 16px 36px;
+      border-radius: 3px;
+      font-size: 15px;
+      font-weight: 400;
+      letter-spacing: 1px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .btn-ghost:hover { color: var(--text); border-color: #444; }
+
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+      margin-top: 80px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.65s forwards;
+    }
+
+    .stat-val {
+      font-family: var(--display);
+      font-size: 42px;
+      letter-spacing: 2px;
+      color: var(--text);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: var(--dim);
+      text-transform: uppercase;
       margin-top: 4px;
     }
 
-    .connect-btn {
-      background: var(--red);
-      border: none;
-      border-radius: 4px;
-      padding: 20px;
-      font-family: var(--display);
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: 3px;
+    /* ── HOW IT WORKS ── */
+    .section {
+      padding: 120px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--red);
       text-transform: uppercase;
-      color: white;
-      width: 100%;
-      cursor: pointer;
-      margin-top: auto;
-      transition: all 0.15s;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-family: var(--display);
+      font-size: clamp(40px, 6vw, 72px);
+      line-height: 1;
+      letter-spacing: 2px;
+      margin-bottom: 64px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 2px;
+    }
+
+    .step {
+      background: var(--bg2);
+      padding: 40px 32px;
       position: relative;
       overflow: hidden;
+      transition: background 0.2s;
     }
 
-    .connect-btn:active { transform: scale(0.98); background: var(--red-dim); }
-    .connect-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .step:hover { background: var(--bg3); }
 
-    .connect-btn::before {
-      content: '';
+    .step-num {
+      font-family: var(--display);
+      font-size: 80px;
+      color: rgba(232,0,29,0.1);
       position: absolute;
-      top: 0; left: -100%;
-      width: 100%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-      transition: left 0.4s;
+      top: 16px; right: 24px;
+      line-height: 1;
+      letter-spacing: 2px;
     }
 
-    .connect-btn:not(:disabled):hover::before { left: 100%; }
+    .step-icon { font-size: 32px; margin-bottom: 20px; }
 
-    /* ── RACE SCREEN ── */
-    #race {
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
+    .step-title {
+      font-family: var(--display);
+      font-size: 22px;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
     }
 
-    .race-header {
+    .step-desc { font-size: 14px; color: var(--dim); line-height: 1.7; }
+
+    /* ── SIMS ── */
+    .sims-section {
+      background: var(--bg2);
+      padding: 80px 40px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sims-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .sims-list { display: flex; flex-direction: column; gap: 2px; }
+
+    .sim-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg2);
+      padding: 20px 24px;
+      background: var(--bg3);
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
     }
 
-    .race-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+    .sim-row:hover { border-left-color: var(--red); background: #1a0005; }
 
-    .status-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--green);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-
-    .status-dot.red { background: var(--red); animation: none; }
-
-    .status-label {
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 2px;
-      color: var(--text-dim);
-    }
-
-    .engineer-badge {
+    .sim-name {
       font-family: var(--display);
-      font-size: 13px;
-      font-weight: 600;
+      font-size: 20px;
       letter-spacing: 2px;
-      color: var(--red);
     }
 
-    .end-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      padding: 8px 14px;
+    .sim-badge {
       font-family: var(--mono);
       font-size: 10px;
       letter-spacing: 2px;
-      color: var(--text-dim);
-      cursor: pointer;
+      padding: 4px 10px;
+      border-radius: 2px;
     }
 
-    /* TELEMETRY STRIP */
-    .telem-strip {
+    .sim-badge.native { background: rgba(0,232,122,0.1); color: var(--green); }
+    .sim-badge.daemon { background: rgba(255,184,0,0.1); color: #ffb800; }
+
+    /* ── FEATURES ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2px;
+    }
+
+    .feature {
+      background: var(--bg2);
+      padding: 36px 32px;
+      transition: background 0.2s;
+    }
+
+    .feature:hover { background: var(--bg3); }
+
+    .feature-icon { font-size: 28px; margin-bottom: 16px; }
+
+    .feature-title {
+      font-family: var(--display);
+      font-size: 20px;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+    }
+
+    .feature-desc { font-size: 14px; color: var(--dim); line-height: 1.7; }
+
+    /* ── PRICING ── */
+    .pricing-section { padding: 120px 40px; background: var(--bg); }
+
+    .pricing-inner { max-width: 1000px; margin: 0 auto; }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2px;
+      margin-top: 64px;
+    }
+
+    .plan {
+      background: var(--bg2);
+      padding: 48px 36px;
+      position: relative;
+      transition: transform 0.2s;
+    }
+
+    .plan:hover { transform: translateY(-4px); }
+
+    .plan.featured {
+      background: #0f0005;
+      border: 1px solid var(--red);
+    }
+
+    .plan-badge {
+      position: absolute;
+      top: -1px; right: 24px;
+      background: var(--red);
+      font-family: var(--mono);
+      font-size: 9px;
+      letter-spacing: 3px;
+      padding: 5px 12px;
+      text-transform: uppercase;
+    }
+
+    .plan-name {
+      font-family: var(--display);
+      font-size: 28px;
+      letter-spacing: 3px;
+      color: var(--dim);
+      margin-bottom: 24px;
+    }
+
+    .plan.featured .plan-name { color: var(--red); }
+
+    .plan-price {
+      font-family: var(--display);
+      font-size: 72px;
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+
+    .plan-price sup {
+      font-size: 28px;
+      vertical-align: super;
+      font-family: var(--body);
+      font-weight: 300;
+    }
+
+    .plan-period {
+      font-size: 13px;
+      color: var(--dim);
+      margin-top: 6px;
+      letter-spacing: 1px;
+    }
+
+    .plan-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 32px 0;
+    }
+
+    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+
+    .plan-features li {
+      font-size: 14px;
+      color: var(--dim);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .plan-features li::before {
+      content: '—';
+      color: var(--red);
+      font-family: var(--mono);
+      flex-shrink: 0;
+    }
+
+    .plan-features li.active { color: var(--text); }
+
+    .plan-btn {
+      display: block;
+      text-align: center;
+      margin-top: 36px;
+      padding: 16px;
+      border-radius: 3px;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    .plan-btn.primary { background: var(--red); color: white; }
+    .plan-btn.primary:hover { background: var(--red2); }
+    .plan-btn.outline { border: 1px solid var(--border); color: var(--dim); }
+    .plan-btn.outline:hover { border-color: #444; color: var(--text); }
+
+    /* ── ENGINEERS ── */
+    .engineers-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      border-bottom: 1px solid var(--border);
+      gap: 2px;
     }
 
-    .telem-cell {
-      padding: 12px 10px;
-      border-right: 1px solid var(--border);
+    .engineer-card {
+      background: var(--bg2);
+      padding: 32px 24px;
       text-align: center;
+      transition: background 0.2s;
     }
 
-    .telem-cell:last-child { border-right: none; }
+    .engineer-card:hover { background: var(--bg3); }
 
-    .telem-val {
+    .engineer-flag { font-size: 40px; margin-bottom: 16px; }
+
+    .engineer-name {
+      font-family: var(--display);
+      font-size: 28px;
+      letter-spacing: 3px;
+    }
+
+    .engineer-style {
+      font-size: 12px;
+      color: var(--dim);
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-logo {
+      font-family: var(--display);
+      font-size: 20px;
+      letter-spacing: 3px;
+    }
+
+    .footer-logo span { color: var(--red); }
+
+    .footer-copy {
       font-family: var(--mono);
-      font-size: 18px;
-      font-weight: 400;
-      color: var(--text);
-    }
-
-    .telem-val.warn { color: var(--amber); }
-    .telem-val.danger { color: var(--red); }
-    .telem-val.good { color: var(--green); }
-
-    .telem-key {
-      font-size: 9px;
+      font-size: 11px;
+      color: var(--dim);
       letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      margin-top: 3px;
-    }
-
-    /* MESSAGES LOG */
-    .messages-area {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .msg {
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
-      animation: fadeUp 0.3s ease;
     }
 
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(8px); }
+      from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .msg-icon {
-      width: 28px; height: 28px;
-      border-radius: 3px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      flex-shrink: 0;
-      margin-top: 2px;
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      nav { padding: 16px 20px; }
+      .nav-links { gap: 16px; }
+      .nav-links a:not(.nav-cta) { display: none; }
+      .hero { padding: 100px 20px 60px; }
+      .hero-stats { gap: 24px; flex-wrap: wrap; }
+      .section { padding: 80px 20px; }
+      .sims-inner { grid-template-columns: 1fr; gap: 40px; }
+      .sims-section { padding: 60px 20px; }
+      .engineers-grid { grid-template-columns: repeat(2, 1fr); }
+      .pricing-section { padding: 80px 20px; }
+      footer { flex-direction: column; gap: 16px; text-align: center; }
     }
-
-    .msg-icon.engineer { background: var(--red); }
-    .msg-icon.system { background: var(--bg3); border: 1px solid var(--border); }
-
-    .msg-content { flex: 1; }
-
-    .msg-sender {
-      font-family: var(--mono);
-      font-size: 9px;
-      letter-spacing: 2px;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-
-    .msg-text {
-      font-size: 15px;
-      line-height: 1.5;
-      color: var(--text);
-    }
-
-    .msg-time {
-      font-family: var(--mono);
-      font-size: 9px;
-      color: var(--text-dim);
-      margin-top: 4px;
-    }
-
-    /* SPEAKING INDICATOR */
-    .speaking-bar {
-      padding: 12px 20px;
-      background: var(--bg2);
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-height: 56px;
-    }
-
-    .wave {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    .wave.active { opacity: 1; }
-
-    .wave-bar {
-      width: 3px;
-      background: var(--red);
-      border-radius: 2px;
-      animation: wave 0.8s ease-in-out infinite;
-    }
-
-    .wave-bar:nth-child(1) { height: 8px; animation-delay: 0s; }
-    .wave-bar:nth-child(2) { height: 16px; animation-delay: 0.1s; }
-    .wave-bar:nth-child(3) { height: 24px; animation-delay: 0.2s; }
-    .wave-bar:nth-child(4) { height: 16px; animation-delay: 0.3s; }
-    .wave-bar:nth-child(5) { height: 8px; animation-delay: 0.4s; }
-
-    @keyframes wave {
-      0%, 100% { transform: scaleY(0.5); }
-      50% { transform: scaleY(1); }
-    }
-
-    .speaking-text {
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 1px;
-      color: var(--text-dim);
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* QUESTION INPUT */
-    .question-area {
-      padding: 12px 16px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      gap: 10px;
-      background: var(--bg);
-    }
-
-    .question-input {
-      flex: 1;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 12px 14px;
-      font-family: var(--body);
-      font-size: 14px;
-      color: var(--text);
-      outline: none;
-    }
-
-    .question-input:focus { border-color: var(--red); }
-    .question-input::placeholder { color: var(--text-dim); }
-
-    .ask-btn {
-      background: var(--red);
-      border: none;
-      border-radius: 4px;
-      padding: 12px 16px;
-      color: white;
-      font-size: 18px;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
-    /* CONNECTING OVERLAY */
-    #connecting {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 24px;
-      z-index: 100;
-    }
-
-    #connecting.active { display: flex; }
-
-    .spinner {
-      width: 48px; height: 48px;
-      border: 2px solid var(--border);
-      border-top-color: var(--red);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .connecting-text {
-      font-family: var(--mono);
-      font-size: 12px;
-      letter-spacing: 3px;
-      color: var(--text-dim);
-      text-transform: uppercase;
-    }
-
-    .error-msg {
-      background: #1a0005;
-      border: 1px solid var(--red-dim);
-      border-radius: 4px;
-      padding: 12px 16px;
-      font-size: 13px;
-      color: var(--red);
-      text-align: center;
-      display: none;
-    }
-
-    .error-msg.show { display: block; }
   </style>
 </head>
 <body>
 
-<!-- SETUP SCREEN -->
-<div id="setup" class="screen active">
-  <div class="setup-header">
-    <div class="logo">PitWall AI</div>
-    <h1 class="setup-title">YOUR<br><span>ENGINEER</span><br>IS READY.</h1>
-    <p class="setup-subtitle">Connect your sim. Start racing.</p>
-    <div class="diagonal-line"></div>
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">PITWALL<span>.</span>AI</div>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="service.html" class="nav-cta">Launch App →</a>
   </div>
+</nav>
 
-  <div class="setup-body">
-
-    <div class="field-group">
-      <div class="field-label">Simulator IP Address</div>
-      <input class="field-input" id="ipInput" type="text"
-        inputmode="decimal" placeholder="192.168.1.x" autocomplete="off" spellcheck="false" />
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-tag">AI Race Engineer — Live Telemetry</div>
+  <h1 class="hero-title">
+    YOUR<br>
+    <span class="red">ENGINEER</span><br>
+    <span class="outline">IS LIVE.</span>
+  </h1>
+  <p class="hero-sub">Connect your sim. Open the app on your phone. Hear live strategy, tyre calls, and fuel management in your ear — like a real pit wall.</p>
+  <div class="hero-actions">
+    <a href="service.html" class="btn-primary">Start Racing →</a>
+    <a href="#how" class="btn-ghost">See how it works</a>
+  </div>
+  <div class="hero-stats">
+    <div>
+      <div class="stat-val">3</div>
+      <div class="stat-label">Sims supported</div>
     </div>
+    <div>
+      <div class="stat-val">0s</div>
+      <div class="stat-label">Install required</div>
+    </div>
+    <div>
+      <div class="stat-val">4</div>
+      <div class="stat-label">Engineer personas</div>
+    </div>
+  </div>
+</section>
 
-    <div class="field-group">
-      <div class="field-label">Simulator</div>
-      <div class="sim-grid">
-        <button class="sim-btn selected" data-sim="lmu" onclick="selectSim(this)">
-          <span class="sim-icon">🏎</span>LMU
-        </button>
-        <button class="sim-btn" data-sim="acc" onclick="selectSim(this)">
-          <span class="sim-icon">🏁</span>ACC
-        </button>
-        <button class="sim-btn" data-sim="iracing" onclick="selectSim(this)">
-          <span class="sim-icon">⚡</span>iRacing
-        </button>
+<!-- HOW IT WORKS -->
+<section class="section" id="how">
+  <div class="section-tag">// how it works</div>
+  <h2 class="section-title">READY IN<br>30 SECONDS.</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-icon">📱</div>
+      <div class="step-title">OPEN THE APP</div>
+      <div class="step-desc">No download. No install. Open PitWall in your phone browser. Works on any device.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-icon">🔗</div>
+      <div class="step-title">ENTER YOUR IP</div>
+      <div class="step-desc">Type your sim PC's local IP — exactly like SimRacing Dashboard. One field. Done.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-icon">🎧</div>
+      <div class="step-title">RACE WITH YOUR ENGINEER</div>
+      <div class="step-desc">Your AI engineer monitors every lap and speaks when it matters. Ask questions anytime.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SIMS -->
+<div class="sims-section">
+  <div class="sims-inner">
+    <div>
+      <div class="section-tag">// supported sims</div>
+      <h2 class="section-title" style="font-size: clamp(36px,5vw,56px); margin-bottom: 32px;">WORKS WITH<br>YOUR SIM.</h2>
+      <p style="color: var(--dim); font-size: 14px; line-height: 1.8;">LMU and ACC connect natively — no setup. iRacing needs a one-click forwarder included in your account.</p>
+    </div>
+    <div class="sims-list">
+      <div class="sim-row">
+        <span class="sim-name">LE MANS ULTIMATE</span>
+        <span class="sim-badge native">NATIVE</span>
       </div>
-    </div>
-
-    <div class="field-group">
-      <div class="field-label">Engineer Persona</div>
-      <div class="persona-grid">
-        <button class="persona-btn selected" data-persona="british" onclick="selectPersona(this)">
-          <div class="persona-name">🇬🇧 JAMES</div>
-          <div class="persona-desc">Calm. Precise. F1 style.</div>
-        </button>
-        <button class="persona-btn" data-persona="italian" onclick="selectPersona(this)">
-          <div class="persona-name">🇮🇹 MARCO</div>
-          <div class="persona-desc">Passionate. Tactical.</div>
-        </button>
-        <button class="persona-btn" data-persona="german" onclick="selectPersona(this)">
-          <div class="persona-name">🇩🇪 HANS</div>
-          <div class="persona-desc">Technical. Data-driven.</div>
-        </button>
-        <button class="persona-btn" data-persona="aussie" onclick="selectPersona(this)">
-          <div class="persona-name">🇦🇺 NICK</div>
-          <div class="persona-desc">Direct. No bullshit.</div>
-        </button>
+      <div class="sim-row">
+        <span class="sim-name">ACC</span>
+        <span class="sim-badge native">NATIVE</span>
       </div>
-    </div>
-
-    <div id="errorMsg" class="error-msg">Cannot connect. Check IP and make sure sim is running.</div>
-
-    <button class="connect-btn" id="connectBtn" onclick="startRace()">
-      NEW RACE →
-    </button>
-
-  </div>
-</div>
-
-<!-- CONNECTING OVERLAY -->
-<div id="connecting">
-  <div class="spinner"></div>
-  <div class="connecting-text">Connecting to sim...</div>
-</div>
-
-<!-- RACE SCREEN -->
-<div id="race" class="screen">
-  <div class="race-header">
-    <div class="race-status">
-      <div class="status-dot" id="statusDot"></div>
-      <span class="status-label" id="statusLabel">LIVE</span>
-    </div>
-    <div class="engineer-badge" id="engineerBadge">JAMES</div>
-    <button class="end-btn" onclick="endRace()">END RACE</button>
-  </div>
-
-  <div class="telem-strip">
-    <div class="telem-cell">
-      <div class="telem-val" id="telPos">P1</div>
-      <div class="telem-key">POS</div>
-    </div>
-    <div class="telem-cell">
-      <div class="telem-val" id="telFuel">100%</div>
-      <div class="telem-key">FUEL</div>
-    </div>
-    <div class="telem-cell">
-      <div class="telem-val" id="telTyre">OK</div>
-      <div class="telem-key">TYRE</div>
-    </div>
-    <div class="telem-cell">
-      <div class="telem-val" id="telGap">—</div>
-      <div class="telem-key">GAP</div>
-    </div>
-  </div>
-
-  <div class="messages-area" id="messagesArea">
-    <div class="msg">
-      <div class="msg-icon system">📡</div>
-      <div class="msg-content">
-        <div class="msg-sender">System</div>
-        <div class="msg-text">Engineer connected. Race session active. Monitoring telemetry.</div>
-        <div class="msg-time" id="startTime">—</div>
+      <div class="sim-row">
+        <span class="sim-name">iRACING</span>
+        <span class="sim-badge daemon">1-CLICK</span>
       </div>
     </div>
   </div>
-
-  <div class="speaking-bar">
-    <div class="wave" id="waveAnim">
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-      <div class="wave-bar"></div>
-    </div>
-    <div class="speaking-text" id="speakingText">Engineer standing by...</div>
-  </div>
-
-  <div class="question-area">
-    <input class="question-input" id="questionInput"
-      placeholder="Ask your engineer..." type="text" />
-    <button class="ask-btn" onclick="askQuestion()">↑</button>
-  </div>
 </div>
 
-<script src="/app.js"></script>
+<!-- FEATURES -->
+<section class="section">
+  <div class="section-tag">// features</div>
+  <h2 class="section-title">WHAT YOUR<br>ENGINEER DOES.</h2>
+  <div class="features-grid">
+    <div class="feature">
+      <div class="feature-icon">🔴</div>
+      <div class="feature-title">LIVE STRATEGY</div>
+      <div class="feature-desc">Pit window calls, undercut alerts, overcut opportunities — in real time as the race evolves.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🟡</div>
+      <div class="feature-title">TYRE MANAGEMENT</div>
+      <div class="feature-desc">Wear monitoring, temperature windows, degradation warnings. Push or save — your call, informed.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">⛽</div>
+      <div class="feature-title">FUEL COACHING</div>
+      <div class="feature-desc">Lift and coast instructions, fuel delta to finish, real-time consumption tracking.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🌧</div>
+      <div class="feature-title">WEATHER CALLS</div>
+      <div class="feature-desc">Rain warnings, compound advice, track evolution — the engineer reads conditions so you don't have to.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">💬</div>
+      <div class="feature-title">ASK ANYTHING</div>
+      <div class="feature-desc">"Should I pit now?" "How's my fuel?" Type or tap mid-race. Instant intelligent response.</div>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔇</div>
+      <div class="feature-title">RADIO DISCIPLINE</div>
+      <div class="feature-desc">The engineer speaks only when it matters. No noise, no flood. Just signal.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ENGINEERS -->
+<section class="section" style="padding-top: 0">
+  <div class="section-tag">// engineer personas</div>
+  <h2 class="section-title">CHOOSE YOUR<br>ENGINEER.</h2>
+  <div class="engineers-grid">
+    <div class="engineer-card">
+      <div class="engineer-flag">🇬🇧</div>
+      <div class="engineer-name">JAMES</div>
+      <div class="engineer-style">Calm. Precise.<br>Classic F1 style.</div>
+    </div>
+    <div class="engineer-card">
+      <div class="engineer-flag">🇮🇹</div>
+      <div class="engineer-name">MARCO</div>
+      <div class="engineer-style">Passionate. Tactical.<br>Always pushing.</div>
+    </div>
+    <div class="engineer-card">
+      <div class="engineer-flag">🇩🇪</div>
+      <div class="engineer-name">HANS</div>
+      <div class="engineer-style">Technical. Data-driven.<br>Zero waste.</div>
+    </div>
+    <div class="engineer-card">
+      <div class="engineer-flag">🇦🇺</div>
+      <div class="engineer-name">NICK</div>
+      <div class="engineer-style">Direct. Blunt.<br>No bullshit.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section" id="pricing">
+  <div class="pricing-inner">
+    <div class="section-tag">// pricing</div>
+    <h2 class="section-title">SIMPLE.<br>TRANSPARENT.</h2>
+    <div class="pricing-grid">
+
+      <div class="plan">
+        <div class="plan-name">FREE</div>
+        <div class="plan-price"><sup>€</sup>0</div>
+        <div class="plan-period">forever</div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+          <li class="active">3 sessions / month</li>
+          <li class="active">1 sim supported</li>
+          <li class="active">All 4 engineer personas</li>
+          <li>Unlimited sessions</li>
+          <li>All sims</li>
+          <li>Team mode</li>
+        </ul>
+        <a href="service.html" class="plan-btn outline">Start Free</a>
+      </div>
+
+      <div class="plan featured">
+        <div class="plan-badge">MOST POPULAR</div>
+        <div class="plan-name">PRO</div>
+        <div class="plan-price"><sup>€</sup>12</div>
+        <div class="plan-period">per month</div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+          <li class="active">Unlimited sessions</li>
+          <li class="active">All 3 sims</li>
+          <li class="active">All 4 engineer personas</li>
+          <li class="active">Priority AI responses</li>
+          <li class="active">Post-race debrief (soon)</li>
+          <li>Team mode</li>
+        </ul>
+        <a href="service.html" class="plan-btn primary">Get Pro →</a>
+      </div>
+
+      <div class="plan">
+        <div class="plan-name">TEAM</div>
+        <div class="plan-price"><sup>€</sup>39</div>
+        <div class="plan-period">per month</div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+          <li class="active">Everything in Pro</li>
+          <li class="active">Up to 5 drivers</li>
+          <li class="active">Team strategy dashboard</li>
+          <li class="active">Multi-driver coordination</li>
+          <li class="active">Endurance relay mode</li>
+          <li class="active">Priority support</li>
+        </ul>
+        <a href="service.html" class="plan-btn outline">Get Team</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">PITWALL<span>.</span>AI</div>
+  <div class="footer-copy">© 2026 — Built for sim racers</div>
+</footer>
+
 </body>
 </html>
