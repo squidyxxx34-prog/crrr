@@ -9,6 +9,7 @@
   <title>PitWall AI — Sign In</title>
   <link rel="manifest" href="/manifest.json" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500&display=swap');
     :root {
@@ -492,7 +493,14 @@
 // ── SUPABASE ──
 const SUPA_URL = 'https://ofptqazlbbalebgqtwbr.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcHRxYXpsYmJhbGViZ3F0d2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODUwMzUsImV4cCI6MjA5NTM2MTAzNX0.aiiFgRcpmUBkJkfQSCPTWjT73hVjUaSARVohR80vNhM';
-const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+let supabase;
+try {
+  const lib = window.supabase || window.supabaseJs;
+  if (!lib) throw new Error('Supabase SDK not loaded');
+  supabase = lib.createClient(SUPA_URL, SUPA_KEY);
+} catch(e) {
+  document.body.innerHTML = '<div style="color:red;font-family:monospace;padding:40px;background:#000;min-height:100vh"><h2>INIT ERROR</h2><p>' + e.message + '</p><p>Check network / CDN access</p></div>';
+}
 
 const FREE_LIMIT = 3;
 
