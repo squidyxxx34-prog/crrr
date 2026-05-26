@@ -8,11 +8,7 @@
   <meta name="theme-color" content="#080808" />
   <title>PitWall AI — Sign In</title>
   <link rel="manifest" href="/manifest.json" />
-  <script type="module">
-  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-  window.supabase = { createClient };
-</script>
-
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500&display=swap');
     :root {
@@ -574,11 +570,24 @@ async function handleAuth() {
 // ── GOOGLE ──
 async function signInWithGoogle() {
   clearAuthMsg();
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin + '/service.html' },
-  });
-  if (error) showAuthMsg(error.message, 'error');
+  showAuthMsg('Connecting to Google...', 'info');
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: 'https://simracingcoach.vercel.app/service.html' },
+    });
+    if (error) {
+      showAuthMsg('Google error: ' + error.message, 'error');
+      return;
+    }
+    if (data?.url) {
+      window.location.href = data.url;
+    } else {
+      showAuthMsg('No redirect URL. Check Supabase Google provider is enabled.', 'error');
+    }
+  } catch(e) {
+    showAuthMsg('Exception: ' + e.message, 'error');
+  }
 }
 
 // ── SOLANA (Phantom) ──
