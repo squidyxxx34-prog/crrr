@@ -577,15 +577,14 @@ async function handleAuth() {
 
 // ── GOOGLE ──
 function signInWithGoogle() {
-  clearAuthMsg();
-  showAuthMsg('Opening Google...', 'info');
-  // Safari fix: build URL directly, no async
-  const params = new URLSearchParams({
-    provider: 'google',
-    redirect_to: 'https://simracingcoach.vercel.app/service.html',
-  });
-  const url = 'https://ofptqazlbbalebgqtwbr.supabase.co/auth/v1/authorize?' + params.toString();
-  window.location.href = url;
+  // Safari-proof: create and click a real <a> tag
+  const url = 'https://ofptqazlbbalebgqtwbr.supabase.co/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent('https://simracingcoach.vercel.app/service.html');
+  const a = document.createElement('a');
+  a.href = url;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 // ── SOLANA (Phantom) ──
