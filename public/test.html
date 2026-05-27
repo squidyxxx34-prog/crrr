@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PitWall Debug</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body{background:#000;color:#fff;font-family:monospace;padding:20px;font-size:14px}
+    .ok{color:#00e87a}.err{color:#e8001d}.info{color:#ffb800}
+    button{background:#e8001d;color:#fff;border:none;padding:14px 24px;font-size:16px;margin:8px 0;display:block;width:100%;border-radius:4px;cursor:pointer}
+    #log{margin-top:20px;line-height:2}
+  </style>
+</head>
+<body>
+<h2>PitWall Debug</h2>
+<div id="log"></div>
+<button onclick="testSupabase()">1. Test Supabase</button>
+<button onclick="testSession()">2. Check Session</button>
+<a href="https://ofptqazlbbalebgqtwbr.supabase.co/auth/v1/authorize?provider=google&redirect_to=https://simracingcoach.vercel.app/test.html" style="display:block;background:#4285F4;color:#fff;border:none;padding:14px 24px;font-size:16px;margin:8px 0;border-radius:4px;text-align:center;text-decoration:none">3. Google Login</button>
+<button onclick="testEmail()">4. Email Login Test</button>
+
+<script>
+const log = (msg, cls='info') => {
+  document.getElementById('log').innerHTML += `<div class="${cls}">${msg}</div>`;
+};
+
+const SUPA_URL = 'https://ofptqazlbbalebgqtwbr.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcHRxYXpsYmJhbGViZ3F0d2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODUwMzUsImV4cCI6MjA5NTM2MTAzNX0.aiiFgRcpmUBkJkfQSCPTWjT73hVjUaSARVohR80vNhM';
+
+let sb;
+
+function testSupabase() {
+  log('Testing Supabase SDK...');
+  try {
+    if (!window.supabase) { log('❌ window.supabase = undefined — CDN failed to load', 'err'); return; }
+    sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+    log('✅ Supabase loaded OK', 'ok');
+    log('Client: ' + (sb ? 'created' : 'null'), sb ? 'ok' : 'err');
+  } catch(e) { log('❌ Error: ' + e.message, 'err'); }
+}
+
+async function testSession() {
+  if (!sb) { log('Run test 1 first', 'err'); return; }
+  log('Checking session...');
+  try {
+    const { data, error } = await sb.auth.getSession();
+    if (error) { log('❌ ' + error.message, 'err'); return; }
+    if (data.session) {
+      log('✅ Session found: ' + data.session.user.email, 'ok');
+      log('Provider: ' + data.session.user.app_metadata?.provider, 'ok');
+    } else {
+      log('⚠️ No session — not logged in', 'info');
+      log('URL hash: ' + (window.location.hash || 'none'), 'info');
+      log('URL search: ' + (window.location.search || 'none'), 'info');
+    }
+  } catch(e) { log('❌ ' + e.message, 'err'); }
+}
+
+async function testEmail() {
+  if (!sb) { log('Run test 1 first', 'err'); return; }
+  log('Testing email signup...');
+  try {
+    const { data, error } = await sb.auth.signUp({
+      email: 'test_' + Date.now() + '@test.com',
+      password: 'Test1234!'
+    });
+    if (error) { log('❌ Signup error: ' + error.message, 'err'); return; }
+    log('✅ Signup OK: ' + JSON.stringify(data.user?.id?.slice(0,8)), 'ok');
+  } catch(e) { log('❌ ' + e.message, 'err'); }
+}
+
+// Auto-run on load
+window.onload = () => {
+  log('Page loaded. URL: ' + window.location.href);
+  log('Hash: ' + (window.location.hash || 'none'));
+  testSupabase();
+  testSession();
+};
+</script>
+</body>
+</html>
