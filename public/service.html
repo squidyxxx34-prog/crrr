@@ -898,20 +898,27 @@ function endRace() {
 }
 
 // ── INIT ──
-// Listen FIRST before getSession so we never miss the event
-supabase.auth.onAuthStateChange(async (event, session) => {
-  if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
-    window.history.replaceState({}, document.title, '/service.html');
-    await afterLogin(session.user);
-  }
-});
-
 (async () => {
+  // If URL has #access_token, Supabase needs to exchange it — call getSession which triggers parsing
+  if (window.location.hash.includes('access_token')) {
+    // Small delay to let Supabase SDK parse the hash
+    await new Promise(r => setTimeout(r, 500));
+  }
+
   const { data: { session } } = await supabase.auth.getSession();
   if (session?.user) {
     window.history.replaceState({}, document.title, '/service.html');
     await afterLogin(session.user);
+    return;
   }
+
+  // Fallback: listen for state change (catches slower OAuth flows)
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if ((event === 'SIGNED_IN') && session?.user) {
+      window.history.replaceState({}, document.title, '/service.html');
+      await afterLogin(session.user);
+    }
+  });
 })();
 
 document.getElementById('authPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleAuth(); });
