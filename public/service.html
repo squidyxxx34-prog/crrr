@@ -656,20 +656,27 @@ async function afterLogin(user) {
 }
 
 async function loadUserPlan(user) {
-  const { data } = await supabase.from('profiles').select('plan,sessions_this_month,sessions_reset_at').eq('id', user.id).single();
-  if (!data) {
-    await supabase.from('profiles').insert({ id: user.id, plan: 'free', sessions_this_month: 0, sessions_reset_at: new Date().toISOString() });
-    state.plan = 'free'; state.sessionsThisMonth = 0;
-  } else {
-    const resetAt = new Date(data.sessions_reset_at);
-    const now = new Date();
-    if (now.getMonth() !== resetAt.getMonth() || now.getFullYear() !== resetAt.getFullYear()) {
-      await supabase.from('profiles').update({ sessions_this_month: 0, sessions_reset_at: now.toISOString() }).eq('id', user.id);
-      state.sessionsThisMonth = 0;
+  // Defensive: if profiles table fails, just default to free and continue
+  try {
+    const { data, error } = await supabase.from('profiles').select('plan,sessions_this_month,sessions_reset_at').eq('id', user.id).single();
+    if (error || !data) {
+      // Try insert, ignore error if already exists
+      await supabase.from('profiles').upsert({ id: user.id, plan: 'free', sessions_this_month: 0, sessions_reset_at: new Date().toISOString() }, { onConflict: 'id' });
+      state.plan = 'free'; state.sessionsThisMonth = 0;
     } else {
-      state.sessionsThisMonth = data.sessions_this_month || 0;
+      const resetAt = new Date(data.sessions_reset_at);
+      const now = new Date();
+      if (now.getMonth() !== resetAt.getMonth() || now.getFullYear() !== resetAt.getFullYear()) {
+        await supabase.from('profiles').update({ sessions_this_month: 0, sessions_reset_at: now.toISOString() }).eq('id', user.id);
+        state.sessionsThisMonth = 0;
+      } else {
+        state.sessionsThisMonth = data.sessions_this_month || 0;
+      }
+      state.plan = data.plan || 'free';
     }
-    state.plan = data.plan || 'free';
+  } catch(e) {
+    // Table error — don't block login, default to free
+    state.plan = 'free'; state.sessionsThisMonth = 0;
   }
 }
 
