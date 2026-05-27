@@ -1,943 +1,535 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#080808" />
-  <title>PitWall AI — Sign In</title>
-  <link rel="manifest" href="/manifest.json" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="theme-color" content="#080808"/>
+  <title>PitWall AI</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500&display=swap');
-    :root {
-      --red:#e8001d; --red-dim:#8b0011; --red-glow:rgba(232,0,29,0.15);
-      --bg:#080808; --bg2:#0f0f0f; --bg3:#161616; --bg4:#1c1c1c;
-      --border:#222; --border2:#2e2e2e;
-      --text:#f2f2f2; --dim:#555; --dim2:#888;
-      --green:#00e87a; --amber:#ffb800; --blue:#4f8ef7;
-      --solana:#9945ff; --eth:#627eea;
-      --mono:'Share Tech Mono',monospace;
-      --display:'Rajdhani',sans-serif;
-      --body:'Barlow',sans-serif;
-    }
-    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html{height:100%}
-    body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100dvh;overflow-x:hidden;display:flex;flex-direction:column}
-
-    /* SCREENS */
-    .screen{display:none;flex:1;flex-direction:column}
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500&display=swap');
+    :root{--red:#e8001d;--bg:#080808;--bg2:#111;--bg3:#1a1a1a;--border:#2a2a2a;--text:#f0f0f0;--dim:#555;--dim2:#888;--green:#00e87a;--amber:#ffb800;--mono:'Share Tech Mono',monospace;--display:'Rajdhani',sans-serif;--body:'Barlow',sans-serif}
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100dvh;overflow-x:hidden}
+    .screen{display:none;min-height:100dvh;flex-direction:column}
     .screen.active{display:flex}
 
-    /* ════════════════════════════════
-       AUTH SCREEN
-    ════════════════════════════════ */
-    #auth{
-      align-items:center;justify-content:center;
-      padding:24px;
-      position:relative;overflow:hidden;
-      background:var(--bg);
-    }
-
-    /* animated bg grid */
-    #auth::before{
-      content:'';position:absolute;inset:0;
-      background-image:
-        linear-gradient(rgba(232,0,29,0.03) 1px,transparent 1px),
-        linear-gradient(90deg,rgba(232,0,29,0.03) 1px,transparent 1px);
-      background-size:48px 48px;
-      animation:gridMove 20s linear infinite;
-    }
-    @keyframes gridMove{from{background-position:0 0}to{background-position:48px 48px}}
-
-    /* red glow top */
-    #auth::after{
-      content:'';position:absolute;top:-200px;left:50%;transform:translateX(-50%);
-      width:600px;height:400px;
-      background:radial-gradient(ellipse,rgba(232,0,29,0.12) 0%,transparent 70%);
-      pointer-events:none;
-    }
-
-    .auth-card{
-      position:relative;z-index:1;
-      width:100%;max-width:400px;
-      background:var(--bg2);
-      border:1px solid var(--border2);
-      border-radius:8px;
-      overflow:hidden;
-      box-shadow:0 32px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.03);
-    }
-
-    /* top red bar */
-    .auth-topbar{
-      height:3px;
-      background:linear-gradient(90deg,var(--red),#ff6b35,var(--red));
-      background-size:200% 100%;
-      animation:shimmer 3s ease-in-out infinite;
-    }
-    @keyframes shimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-
-    .auth-inner{padding:36px 32px 32px}
-
-    .auth-logo{
-      font-family:var(--display);font-size:28px;letter-spacing:4px;
-      text-align:center;margin-bottom:4px;
-    }
+    /* AUTH */
+    #auth{align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+    #auth::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(232,0,29,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(232,0,29,.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
+    .auth-card{position:relative;z-index:1;width:100%;max-width:400px;background:var(--bg2);border:1px solid #2e2e2e;border-radius:8px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.6)}
+    .auth-topbar{height:3px;background:linear-gradient(90deg,var(--red),#ff6b35,var(--red));background-size:200%;animation:shimmer 3s ease-in-out infinite}
+    @keyframes shimmer{0%,100%{background-position:0}50%{background-position:100%}}
+    .auth-inner{padding:36px 32px 28px}
+    .auth-logo{font-family:var(--display);font-size:28px;letter-spacing:4px;text-align:center;margin-bottom:4px}
     .auth-logo span{color:var(--red)}
-
-    .auth-tagline{
-      font-family:var(--mono);font-size:10px;letter-spacing:3px;
-      color:var(--dim2);text-align:center;text-transform:uppercase;
-      margin-bottom:32px;
-    }
-
-    /* tabs */
-    .auth-tabs{
-      display:grid;grid-template-columns:1fr 1fr;
-      background:var(--bg3);border-radius:6px;padding:4px;gap:4px;
-      margin-bottom:28px;
-    }
-    .auth-tab{
-      padding:10px;border:none;border-radius:4px;
-      font-family:var(--mono);font-size:11px;letter-spacing:2px;
-      color:var(--dim2);background:transparent;cursor:pointer;
-      transition:all 0.2s;
-    }
-    .auth-tab.active{background:var(--red);color:#fff;box-shadow:0 2px 12px rgba(232,0,29,0.3)}
-
-    /* fields */
-    .field{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
-    .field-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--dim2)}
-    .field-input{
-      background:var(--bg3);border:1px solid var(--border2);border-radius:5px;
-      padding:13px 14px;font-family:var(--mono);font-size:15px;color:var(--text);
-      width:100%;outline:none;transition:border-color 0.2s,box-shadow 0.2s;
-      letter-spacing:1px;
-    }
-    .field-input:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-glow)}
-    .field-input::placeholder{color:var(--dim);font-size:13px}
-
-    /* primary btn */
-    .btn-main{
-      width:100%;padding:15px;border:none;border-radius:5px;
-      background:var(--red);color:#fff;
-      font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:3px;
-      cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;
-      margin-top:4px;
-    }
-    .btn-main::after{
-      content:'';position:absolute;inset:0;
-      background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent);
-      transform:translateX(-100%);transition:transform 0.4s;
-    }
-    .btn-main:hover::after{transform:translateX(100%)}
-    .btn-main:hover{background:#ff1f3a;box-shadow:0 4px 20px rgba(232,0,29,0.35)}
-    .btn-main:active{transform:scale(0.98)}
-    .btn-main:disabled{opacity:0.4;cursor:not-allowed}
-    .btn-main.loading{color:transparent}
-    .btn-main.loading::before{
-      content:'';position:absolute;top:50%;left:50%;
-      width:18px;height:18px;margin:-9px 0 0 -9px;
-      border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;
-      border-radius:50%;animation:spin 0.7s linear infinite;
-    }
+    .auth-tag{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--dim2);text-align:center;margin-bottom:28px}
+    .tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--bg3);border-radius:6px;padding:4px;gap:4px;margin-bottom:24px}
+    .tab{padding:10px;border:none;border-radius:4px;font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--dim2);background:transparent;cursor:pointer;transition:all .2s}
+    .tab.active{background:var(--red);color:#fff}
+    .field{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+    .flabel{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--dim2)}
+    .finput{background:var(--bg3);border:1px solid #2e2e2e;border-radius:5px;padding:13px 14px;font-family:var(--mono);font-size:15px;color:var(--text);width:100%;outline:none;transition:border-color .2s}
+    .finput:focus{border-color:var(--red)}
+    .finput::placeholder{color:var(--dim);font-size:13px}
+    .bmain{width:100%;padding:15px;border:none;border-radius:5px;background:var(--red);color:#fff;font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:3px;cursor:pointer;transition:all .2s;margin-top:4px;position:relative}
+    .bmain:disabled{opacity:.4;cursor:not-allowed}
+    .bmain.loading::after{content:'';position:absolute;top:50%;left:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+    .bmain.loading{color:transparent}
     @keyframes spin{to{transform:rotate(360deg)}}
+    .divider{display:flex;align-items:center;gap:12px;margin:18px 0}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:#2e2e2e}
+    .divider span{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--dim)}
+    .bgoogle{width:100%;padding:13px 16px;border-radius:5px;border:1px solid #2e2e2e;background:var(--bg3);color:var(--text);font-family:var(--body);font-size:14px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;transition:all .2s;cursor:pointer}
+    .bgoogle:hover{border-color:#444;background:var(--bg3)}
+    .bgoogle svg{width:18px;height:18px;flex-shrink:0}
+    .msg{padding:11px 14px;border-radius:5px;font-size:13px;line-height:1.5;margin-top:8px;display:none}
+    .msg.error{background:rgba(232,0,29,.08);border:1px solid rgba(232,0,29,.2);color:#ff6b6b;display:block}
+    .msg.success{background:rgba(0,232,122,.08);border:1px solid rgba(0,232,122,.2);color:var(--green);display:block}
+    .msg.info{background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);color:#4f8ef7;display:block}
+    .auth-footer{padding:14px 32px 18px;border-top:1px solid var(--border);text-align:center}
+    .auth-footer a{font-size:12px;color:var(--dim2);text-decoration:none}
 
-    /* divider */
-    .or-divider{
-      display:flex;align-items:center;gap:12px;
-      margin:20px 0;
-    }
-    .or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:var(--border2)}
-    .or-divider span{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--dim)}
+    /* LOADING */
+    #loading{align-items:center;justify-content:center;gap:20px}
+    .spinner{width:40px;height:40px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}
+    .loading-text{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--dim2)}
 
-    /* social btns */
-    .social-grid{display:flex;flex-direction:column;gap:10px}
-
-    .btn-social{
-      width:100%;padding:13px 16px;border-radius:5px;border:1px solid var(--border2);
-      background:var(--bg3);color:var(--text);
-      font-family:var(--body);font-size:14px;font-weight:500;
-      cursor:pointer;transition:all 0.2s;
-      display:flex;align-items:center;justify-content:center;gap:10px;
-    }
-    .btn-social:hover{border-color:#444;background:var(--bg4);transform:translateY(-1px)}
-    .btn-social:active{transform:scale(0.98)}
-    .btn-social svg{width:18px;height:18px;flex-shrink:0}
-
-    /* wallet row */
-    .wallet-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-    .btn-wallet{
-      padding:13px 10px;border-radius:5px;border:1px solid var(--border2);
-      background:var(--bg3);color:var(--text);
-      font-family:var(--mono);font-size:11px;letter-spacing:1px;
-      cursor:pointer;transition:all 0.2s;
-      display:flex;align-items:center;justify-content:center;gap:8px;
-    }
-    .btn-wallet:hover{transform:translateY(-1px)}
-    .btn-wallet:active{transform:scale(0.98)}
-    .btn-wallet.sol{border-color:rgba(153,69,255,0.3)}
-    .btn-wallet.sol:hover{border-color:var(--solana);background:rgba(153,69,255,0.08);box-shadow:0 0 16px rgba(153,69,255,0.15)}
-    .btn-wallet.eth{border-color:rgba(98,126,234,0.3)}
-    .btn-wallet.eth:hover{border-color:var(--eth);background:rgba(98,126,234,0.08);box-shadow:0 0 16px rgba(98,126,234,0.15)}
-    .btn-wallet .wallet-dot{width:8px;height:8px;border-radius:50%}
-    .btn-wallet.sol .wallet-dot{background:var(--solana)}
-    .btn-wallet.eth .wallet-dot{background:var(--eth)}
-
-    /* message */
-    .auth-msg{
-      padding:11px 14px;border-radius:5px;font-size:13px;
-      line-height:1.5;margin-top:4px;display:none;
-    }
-    .auth-msg.error{background:rgba(232,0,29,0.08);border:1px solid rgba(232,0,29,0.2);color:#ff6b6b;display:block}
-    .auth-msg.success{background:rgba(0,232,122,0.08);border:1px solid rgba(0,232,122,0.2);color:var(--green);display:block}
-    .auth-msg.info{background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);color:var(--blue);display:block}
-
-    .auth-footer{
-      padding:16px 32px 20px;
-      border-top:1px solid var(--border);
-      display:flex;align-items:center;justify-content:center;gap:4px;
-      font-size:12px;color:var(--dim2);
-    }
-    .auth-footer a{color:var(--dim2);text-decoration:none;transition:color 0.2s}
-    .auth-footer a:hover{color:var(--text)}
-
-    /* wallet status toast */
-    .wallet-toast{
-      position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-      background:var(--bg3);border:1px solid var(--border2);border-radius:6px;
-      padding:12px 20px;font-family:var(--mono);font-size:12px;letter-spacing:1px;
-      color:var(--text);white-space:nowrap;z-index:999;
-      opacity:0;transition:opacity 0.3s;pointer-events:none;
-    }
-    .wallet-toast.show{opacity:1}
-
-    /* ════════════════════════════════
-       GATE SCREEN
-    ════════════════════════════════ */
-    #gate{align-items:center;justify-content:center;padding:40px 24px;background:var(--bg)}
+    /* GATE */
+    #gate{align-items:center;justify-content:center;padding:40px 24px}
     .gate-box{width:100%;max-width:380px;display:flex;flex-direction:column;gap:20px;text-align:center}
     .gate-icon{font-size:48px}
     .gate-title{font-family:var(--display);font-size:28px;letter-spacing:2px}
     .gate-desc{color:var(--dim2);font-size:14px;line-height:1.7}
-    .gate-plans{display:flex;flex-direction:column;gap:10px;margin-top:8px}
-    .gate-plan-btn{display:block;padding:16px;border-radius:4px;font-family:var(--display);font-size:16px;letter-spacing:2px;text-decoration:none;text-align:center;transition:all 0.15s}
-    .gate-plan-btn.pro{background:var(--red);color:white}
-    .gate-plan-btn.team{background:var(--bg3);border:1px solid var(--border);color:var(--dim2)}
-    .gate-free-note{font-size:11px;color:var(--dim2);letter-spacing:1px}
-    .gate-free-note a{color:var(--red);text-decoration:none;cursor:pointer}
-    .gate-signout{font-size:11px;color:var(--dim2);cursor:pointer}
-    .gate-signout:hover{color:var(--text)}
+    .gate-btn{display:block;padding:16px;border-radius:4px;font-family:var(--display);font-size:16px;letter-spacing:2px;text-decoration:none;text-align:center;transition:all .15s}
+    .gate-btn.pro{background:var(--red);color:white;margin-bottom:10px}
+    .gate-btn.team{background:var(--bg3);border:1px solid var(--border);color:var(--dim2)}
+    .gate-note{font-size:11px;color:var(--dim2)}
+    .gate-note a{color:var(--red);text-decoration:none;cursor:pointer}
+    .gate-out{font-size:11px;color:var(--dim2);cursor:pointer;margin-top:4px}
 
-    /* ════════════════════════════════
-       SETUP SCREEN
-    ════════════════════════════════ */
-    #setup{padding:0;background:var(--bg);position:relative;overflow:hidden}
+    /* SETUP */
+    #setup{padding:0;position:relative;overflow:hidden}
     .setup-header{padding:52px 32px 28px;position:relative;z-index:2}
-    .logo{font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:var(--red);margin-bottom:32px}
-    .logo a{color:inherit;text-decoration:none}
-    .user-badge{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-    .user-email{font-family:var(--mono);font-size:11px;color:var(--dim2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .plan-pill{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:4px 10px;border-radius:2px;text-transform:uppercase}
-    .plan-pill.free{background:var(--bg3);color:var(--dim2);border:1px solid var(--border)}
-    .plan-pill.pro{background:rgba(232,0,29,0.15);color:var(--red)}
-    .plan-pill.team{background:rgba(0,232,122,0.1);color:var(--green)}
-    .setup-title{font-family:var(--display);font-size:clamp(36px,10vw,52px);font-weight:700;line-height:1;letter-spacing:-1px}
-    .setup-title span{color:var(--red)}
-    .setup-subtitle{font-size:14px;color:var(--dim2);margin-top:10px;font-weight:300}
-    .sessions-left{font-family:var(--mono);font-size:11px;color:var(--amber);margin-top:6px}
-    .diagonal-line{position:absolute;top:0;right:-40px;width:2px;height:100%;background:linear-gradient(to bottom,transparent,var(--red),transparent);transform:rotate(15deg);opacity:0.3}
+    .slogo{font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:var(--red);margin-bottom:32px}
+    .slogo a{color:inherit;text-decoration:none}
+    .ubadge{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .uemail{font-family:var(--mono);font-size:11px;color:var(--dim2);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .ppill{font-family:var(--mono);font-size:9px;letter-spacing:2px;padding:4px 10px;border-radius:2px;text-transform:uppercase}
+    .ppill.free{background:var(--bg3);color:var(--dim2);border:1px solid var(--border)}
+    .ppill.pro{background:rgba(232,0,29,.15);color:var(--red)}
+    .ppill.team{background:rgba(0,232,122,.1);color:var(--green)}
+    .stitle{font-family:var(--display);font-size:clamp(36px,10vw,52px);font-weight:700;line-height:1;letter-spacing:-1px}
+    .stitle span{color:var(--red)}
+    .ssub{font-size:14px;color:var(--dim2);margin-top:10px;font-weight:300}
+    .sleft{font-family:var(--mono);font-size:11px;color:var(--amber);margin-top:6px}
+    .diag{position:absolute;top:0;right:-40px;width:2px;height:100%;background:linear-gradient(to bottom,transparent,var(--red),transparent);transform:rotate(15deg);opacity:.3}
     .setup-body{flex:1;padding:0 32px 40px;display:flex;flex-direction:column;gap:24px;position:relative;z-index:2}
-    .field-group{display:flex;flex-direction:column;gap:8px}
-    .field-label2{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--dim2)}
-    .field-input2{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:14px 16px;font-family:var(--mono);font-size:16px;color:var(--text);width:100%;outline:none;transition:border-color 0.2s;letter-spacing:2px}
-    .field-input2:focus{border-color:var(--red)}
-    .field-input2::placeholder{color:var(--dim);font-size:14px}
-    .sim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-    .sim-btn{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:16px 8px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:all 0.15s;font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:1px;color:var(--dim2)}
-    .sim-btn .sim-icon{font-size:24px}
-    .sim-btn.selected{border-color:var(--red);color:var(--text);background:#1a0005}
-    .persona-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-    .persona-btn{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:14px 12px;cursor:pointer;transition:all 0.15s;text-align:left}
-    .persona-btn.selected{border-color:var(--red);background:#1a0005}
-    .persona-name{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:1px}
-    .persona-desc{font-size:11px;color:var(--dim2);margin-top:4px}
-    .connect-btn{background:var(--red);border:none;border-radius:4px;padding:20px;font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:white;width:100%;cursor:pointer;margin-top:auto;transition:all 0.15s}
-    .connect-btn:active{transform:scale(0.98);background:var(--red-dim)}
-    .connect-btn:disabled{opacity:0.4;cursor:not-allowed}
-    .error-msg{background:#1a0005;border:1px solid var(--red-dim);border-radius:4px;padding:12px 16px;font-size:13px;color:var(--red);text-align:center;display:none}
-    .error-msg.show{display:block}
-    .signout-link{font-size:11px;color:var(--dim2);text-align:center;cursor:pointer}
-    .signout-link:hover{color:var(--text)}
+    .fgroup{display:flex;flex-direction:column;gap:8px}
+    .flabel2{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--dim2)}
+    .finput2{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:14px 16px;font-family:var(--mono);font-size:16px;color:var(--text);width:100%;outline:none;transition:border-color .2s;letter-spacing:2px}
+    .finput2:focus{border-color:var(--red)}
+    .finput2::placeholder{color:var(--dim);font-size:14px}
+    .simgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .simbtn{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:16px 8px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:all .15s;font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:1px;color:var(--dim2)}
+    .simbtn.sel{border-color:var(--red);color:var(--text);background:#1a0005}
+    .pgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .pbtn{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:14px 12px;cursor:pointer;transition:all .15s;text-align:left}
+    .pbtn.sel{border-color:var(--red);background:#1a0005}
+    .pname{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:1px}
+    .pdesc{font-size:11px;color:var(--dim2);margin-top:4px}
+    .gobtn{background:var(--red);border:none;border-radius:4px;padding:20px;font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:white;width:100%;cursor:pointer;margin-top:auto;transition:all .15s}
+    .gobtn:active{transform:scale(.98);background:#8b0011}
+    .gobtn:disabled{opacity:.4;cursor:not-allowed}
+    .errmsg{background:#1a0005;border:1px solid #8b0011;border-radius:4px;padding:12px 16px;font-size:13px;color:var(--red);text-align:center;display:none}
+    .errmsg.show{display:block}
+    .outlink{font-size:11px;color:var(--dim2);text-align:center;cursor:pointer}
 
-    /* ════════════════════════════════
-       RACE SCREEN
-    ════════════════════════════════ */
+    /* RACE */
     #race{background:var(--bg);display:flex;flex-direction:column}
-    .race-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg2)}
-    .race-status{display:flex;align-items:center;gap:8px}
-    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-    .status-label{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--dim2)}
-    .engineer-badge{font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:2px;color:var(--red)}
-    .end-btn{background:transparent;border:1px solid var(--border);border-radius:3px;padding:8px 14px;font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--dim2);cursor:pointer}
-    .telem-strip{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border)}
-    .telem-cell{padding:12px 10px;border-right:1px solid var(--border);text-align:center}
-    .telem-cell:last-child{border-right:none}
-    .telem-val{font-family:var(--mono);font-size:18px;color:var(--text)}
-    .telem-val.warn{color:var(--amber)}.telem-val.danger{color:var(--red)}.telem-val.good{color:var(--green)}
-    .telem-key{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim2);margin-top:3px}
-    .messages-area{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
-    .msg{display:flex;gap:10px;align-items:flex-start;animation:fadeUp 0.3s ease}
+    .rhead{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg2)}
+    .rstatus{display:flex;align-items:center;gap:8px}
+    .rdot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    .rlabel{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--dim2)}
+    .rbadge{font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:2px;color:var(--red)}
+    .endbtn{background:transparent;border:1px solid var(--border);border-radius:3px;padding:8px 14px;font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--dim2);cursor:pointer}
+    .tstrip{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border)}
+    .tcell{padding:12px 10px;border-right:1px solid var(--border);text-align:center}
+    .tcell:last-child{border-right:none}
+    .tval{font-family:var(--mono);font-size:18px;color:var(--text)}
+    .tval.warn{color:var(--amber)}.tval.danger{color:var(--red)}.tval.good{color:var(--green)}
+    .tkey{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim2);margin-top:3px}
+    .msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+    .msg2{display:flex;gap:10px;align-items:flex-start;animation:fadeUp .3s ease}
     @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-    .msg-icon{width:28px;height:28px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:2px}
-    .msg-icon.engineer{background:var(--red)}.msg-icon.system{background:var(--bg3);border:1px solid var(--border)}
-    .msg-content{flex:1}
-    .msg-sender{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--dim2);text-transform:uppercase;margin-bottom:4px}
-    .msg-text{font-size:15px;line-height:1.5;color:var(--text)}
-    .msg-time{font-family:var(--mono);font-size:9px;color:var(--dim2);margin-top:4px}
-    .speaking-bar{padding:12px 20px;background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;min-height:56px}
-    .wave{display:flex;align-items:center;gap:3px;opacity:0;transition:opacity 0.3s}
-    .wave.active{opacity:1}
-    .wave-bar{width:3px;background:var(--red);border-radius:2px;animation:wave 0.8s ease-in-out infinite}
-    .wave-bar:nth-child(1){height:8px;animation-delay:0s}.wave-bar:nth-child(2){height:16px;animation-delay:.1s}.wave-bar:nth-child(3){height:24px;animation-delay:.2s}.wave-bar:nth-child(4){height:16px;animation-delay:.3s}.wave-bar:nth-child(5){height:8px;animation-delay:.4s}
-    @keyframes wave{0%,100%{transform:scaleY(0.5)}50%{transform:scaleY(1)}}
-    .speaking-text{font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--dim2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .question-area{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:10px;background:var(--bg)}
-    .question-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:12px 14px;font-family:var(--body);font-size:14px;color:var(--text);outline:none}
-    .question-input:focus{border-color:var(--red)}
-    .question-input::placeholder{color:var(--dim2)}
-    .ask-btn{background:var(--red);border:none;border-radius:4px;padding:12px 16px;color:white;font-size:18px;cursor:pointer}
+    .micon{width:28px;height:28px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:2px}
+    .micon.eng{background:var(--red)}.micon.sys{background:var(--bg3);border:1px solid var(--border)}
+    .mcontent{flex:1}
+    .msender{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--dim2);text-transform:uppercase;margin-bottom:4px}
+    .mtext{font-size:15px;line-height:1.5}
+    .mtime{font-family:var(--mono);font-size:9px;color:var(--dim2);margin-top:4px}
+    .spbar{padding:12px 20px;background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;min-height:56px}
+    .wave{display:flex;align-items:center;gap:3px;opacity:0;transition:opacity .3s}
+    .wave.on{opacity:1}
+    .wbar{width:3px;background:var(--red);border-radius:2px;animation:wv .8s ease-in-out infinite}
+    .wbar:nth-child(1){height:8px;animation-delay:0s}.wbar:nth-child(2){height:16px;animation-delay:.1s}.wbar:nth-child(3){height:24px;animation-delay:.2s}.wbar:nth-child(4){height:16px;animation-delay:.3s}.wbar:nth-child(5){height:8px;animation-delay:.4s}
+    @keyframes wv{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(1)}}
+    .sptext{font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--dim2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .qarea{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:10px}
+    .qinput{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:12px 14px;font-family:var(--body);font-size:14px;color:var(--text);outline:none}
+    .qinput:focus{border-color:var(--red)}
+    .qbtn{background:var(--red);border:none;border-radius:4px;padding:12px 16px;color:white;font-size:18px;cursor:pointer}
 
-    /* CONNECTING */
-    #connecting{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:24px;z-index:100}
-    #connecting.active{display:flex}
-    .spinner{width:48px;height:48px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}
-    .connecting-text{font-family:var(--mono);font-size:12px;letter-spacing:3px;color:var(--dim2);text-transform:uppercase}
-
-    /* TOAST */
-    .wallet-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:12px 20px;font-family:var(--mono);font-size:12px;letter-spacing:1px;color:var(--text);white-space:nowrap;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none}
-    .wallet-toast.show{opacity:1}
+    /* OVERLAY */
+    #overlay{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;gap:24px;z-index:100}
+    #overlay.on{display:flex}
   </style>
 </head>
 <body>
 
-<!-- ═══════════════ AUTH SCREEN ═══════════════ -->
+<!-- AUTH -->
 <div id="auth" class="screen active">
   <div class="auth-card">
     <div class="auth-topbar"></div>
     <div class="auth-inner">
-
       <div class="auth-logo">PITWALL<span>.</span>AI</div>
-      <div class="auth-tagline">AI Race Engineer</div>
-
-      <!-- Tabs -->
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">SIGN IN</button>
-        <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">REGISTER</button>
-      </div>
-
-      <!-- Email / Password -->
-      <div class="field">
-        <div class="field-label">Email</div>
-        <input class="field-input" id="authEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+      <div class="auth-tag">AI RACE ENGINEER</div>
+      <div class="tabs">
+        <button class="tab active" id="t1" onclick="switchTab('login')">SIGN IN</button>
+        <button class="tab" id="t2" onclick="switchTab('signup')">REGISTER</button>
       </div>
       <div class="field">
-        <div class="field-label">Password</div>
-        <input class="field-input" id="authPassword" type="password" placeholder="••••••••" autocomplete="current-password" />
+        <div class="flabel">Email</div>
+        <input class="finput" id="email" type="email" placeholder="you@example.com" autocomplete="email"/>
       </div>
-
-      <div id="authMsg" class="auth-msg"></div>
-
-      <button class="btn-main" id="authBtn" onclick="handleAuth(); return false;">SIGN IN →</button>
-
-      <!-- Divider -->
-      <div class="or-divider"><span>OR</span></div>
-
-      <!-- Social -->
-      <div class="social-grid">
-        <a class="btn-social" href="https://ofptqazlbbalebgqtwbr.supabase.co/auth/v1/authorize?provider=google&redirect_to=https://simracingcoach.vercel.app/service.html&flow_type=pkce" style="text-decoration:none;">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:18px;height:18px;flex-shrink:0">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-          </svg>
-          Continue with Google
-        </a>
-
-        <!-- Wallets -->
-        <div class="wallet-row">
-          <button class="btn-wallet sol" onclick="signInWithSolana()">
-            <span class="wallet-dot"></span>
-            SOLANA
-          </button>
-          <button class="btn-wallet eth" onclick="signInWithEthereum()">
-            <span class="wallet-dot"></span>
-            ETHEREUM
-          </button>
-        </div>
+      <div class="field">
+        <div class="flabel">Password</div>
+        <input class="finput" id="pass" type="password" placeholder="••••••••" autocomplete="current-password"/>
       </div>
-
+      <div id="authmsg" class="msg"></div>
+      <button class="bmain" id="authbtn" onclick="doAuth()">SIGN IN →</button>
+      <div class="divider"><span>OR</span></div>
+      <a class="bgoogle" id="googlebtn" href="#">
+        <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Continue with Google
+      </a>
     </div>
-    <div class="auth-footer">
-      <a href="/">← Back to home</a>
-    </div>
+    <div class="auth-footer"><a href="/">← Back to home</a></div>
   </div>
 </div>
 
-<!-- ═══════════════ GATE SCREEN ═══════════════ -->
+<!-- LOADING -->
+<div id="loading" class="screen">
+  <div class="spinner"></div>
+  <div class="loading-text">SIGNING IN...</div>
+</div>
+
+<!-- GATE -->
 <div id="gate" class="screen">
   <div class="gate-box">
     <div class="gate-icon">🏁</div>
     <div class="gate-title">UPGRADE TO RACE</div>
-    <div class="gate-desc">You've used your 3 free sessions this month. Upgrade for unlimited access.</div>
-    <div class="gate-plans">
-      <a href="https://buy.stripe.com/eVqeVdcgodZ518jaFFes003" class="gate-plan-btn pro">PRO — €12/month →</a>
-      <a href="https://buy.stripe.com/9B6bJ15S0f394kv7ttes004" class="gate-plan-btn team">TEAM — €39/month →</a>
+    <div class="gate-desc">You've used your 3 free sessions this month.</div>
+    <div>
+      <a href="https://buy.stripe.com/eVqeVdcgodZ518jaFFes003" class="gate-btn pro">PRO — €12/month →</a>
+      <a href="https://buy.stripe.com/9B6bJ15S0f394kv7ttes004" class="gate-btn team">TEAM — €39/month →</a>
     </div>
-    <div class="gate-free-note">Sessions reset on the 1st. <a onclick="showSetup()">Continue anyway →</a></div>
-    <div class="gate-signout" onclick="signOut()">Sign out</div>
+    <div class="gate-note">Sessions reset on the 1st. <a onclick="gotoSetup()">Continue anyway →</a></div>
+    <div class="gate-out" onclick="signOut()">Sign out</div>
   </div>
 </div>
 
-<!-- ═══════════════ SETUP SCREEN ═══════════════ -->
+<!-- SETUP -->
 <div id="setup" class="screen">
   <div class="setup-header">
-    <div class="logo"><a href="/">← PitWall AI</a></div>
-    <div class="user-badge">
-      <div class="user-email" id="userEmail">—</div>
-      <div class="plan-pill free" id="planPill">FREE</div>
+    <div class="slogo"><a href="/">← PitWall AI</a></div>
+    <div class="ubadge">
+      <div class="uemail" id="uemail">—</div>
+      <div class="ppill free" id="ppill">FREE</div>
     </div>
-    <h1 class="setup-title">YOUR<br><span>ENGINEER</span><br>IS READY.</h1>
-    <p class="setup-subtitle">Connect your sim. Start racing.</p>
-    <p class="sessions-left" id="sessionsLeft"></p>
-    <div class="diagonal-line"></div>
+    <h1 class="stitle">YOUR<br><span>ENGINEER</span><br>IS READY.</h1>
+    <p class="ssub">Connect your sim. Start racing.</p>
+    <p class="sleft" id="sleft"></p>
+    <div class="diag"></div>
   </div>
   <div class="setup-body">
-    <div class="field-group">
-      <div class="field-label2">Simulator IP Address</div>
-      <input class="field-input2" id="ipInput" type="text" inputmode="decimal" placeholder="192.168.1.x" autocomplete="off" spellcheck="false" />
+    <div class="fgroup">
+      <div class="flabel2">Simulator IP Address</div>
+      <input class="finput2" id="ipinput" type="text" inputmode="decimal" placeholder="192.168.1.x" autocomplete="off" spellcheck="false"/>
     </div>
-    <div class="field-group">
-      <div class="field-label2">Simulator</div>
-      <div class="sim-grid">
-        <button class="sim-btn selected" data-sim="lmu" onclick="selectSim(this)"><span class="sim-icon">🏎</span>LMU</button>
-        <button class="sim-btn" data-sim="acc" onclick="selectSim(this)"><span class="sim-icon">🏁</span>ACC</button>
-        <button class="sim-btn" data-sim="iracing" onclick="selectSim(this)"><span class="sim-icon">⚡</span>iRacing</button>
+    <div class="fgroup">
+      <div class="flabel2">Simulator</div>
+      <div class="simgrid">
+        <button class="simbtn sel" data-sim="lmu" onclick="selSim(this)"><span style="font-size:24px">🏎</span>LMU</button>
+        <button class="simbtn" data-sim="acc" onclick="selSim(this)"><span style="font-size:24px">🏁</span>ACC</button>
+        <button class="simbtn" data-sim="iracing" onclick="selSim(this)"><span style="font-size:24px">⚡</span>iRacing</button>
       </div>
     </div>
-    <div class="field-group">
-      <div class="field-label2">Engineer Persona</div>
-      <div class="persona-grid">
-        <button class="persona-btn selected" data-persona="british" onclick="selectPersona(this)"><div class="persona-name">🇬🇧 JAMES</div><div class="persona-desc">Calm. Precise. F1 style.</div></button>
-        <button class="persona-btn" data-persona="italian" onclick="selectPersona(this)"><div class="persona-name">🇮🇹 MARCO</div><div class="persona-desc">Passionate. Tactical.</div></button>
-        <button class="persona-btn" data-persona="german" onclick="selectPersona(this)"><div class="persona-name">🇩🇪 HANS</div><div class="persona-desc">Technical. Data-driven.</div></button>
-        <button class="persona-btn" data-persona="aussie" onclick="selectPersona(this)"><div class="persona-name">🇦🇺 NICK</div><div class="persona-desc">Direct. No bullshit.</div></button>
+    <div class="fgroup">
+      <div class="flabel2">Engineer Persona</div>
+      <div class="pgrid">
+        <button class="pbtn sel" data-p="british" onclick="selP(this)"><div class="pname">🇬🇧 JAMES</div><div class="pdesc">Calm. Precise. F1 style.</div></button>
+        <button class="pbtn" data-p="italian" onclick="selP(this)"><div class="pname">🇮🇹 MARCO</div><div class="pdesc">Passionate. Tactical.</div></button>
+        <button class="pbtn" data-p="german" onclick="selP(this)"><div class="pname">🇩🇪 HANS</div><div class="pdesc">Technical. Data-driven.</div></button>
+        <button class="pbtn" data-p="aussie" onclick="selP(this)"><div class="pname">🇦🇺 NICK</div><div class="pdesc">Direct. No bullshit.</div></button>
       </div>
     </div>
-    <div id="errorMsg" class="error-msg"></div>
-    <button class="connect-btn" id="connectBtn" onclick="startRace()">NEW RACE →</button>
-    <div class="signout-link" onclick="signOut()">Sign out</div>
+    <div id="errmsg" class="errmsg"></div>
+    <button class="gobtn" id="gobtn" onclick="startRace()">NEW RACE →</button>
+    <div class="outlink" onclick="signOut()">Sign out</div>
   </div>
 </div>
 
-<!-- ═══════════════ CONNECTING ═══════════════ -->
-<div id="connecting">
+<!-- OVERLAY -->
+<div id="overlay">
   <div class="spinner"></div>
-  <div class="connecting-text">Connecting to sim...</div>
+  <div class="loading-text" id="overlaytext">CONNECTING...</div>
 </div>
 
-<!-- ═══════════════ RACE SCREEN ═══════════════ -->
+<!-- RACE -->
 <div id="race" class="screen">
-  <div class="race-header">
-    <div class="race-status"><div class="status-dot"></div><span class="status-label">LIVE</span></div>
-    <div class="engineer-badge" id="engineerBadge">JAMES</div>
-    <button class="end-btn" onclick="endRace()">END RACE</button>
+  <div class="rhead">
+    <div class="rstatus"><div class="rdot"></div><span class="rlabel">LIVE</span></div>
+    <div class="rbadge" id="rbadge">JAMES</div>
+    <button class="endbtn" onclick="endRace()">END RACE</button>
   </div>
-  <div class="telem-strip">
-    <div class="telem-cell"><div class="telem-val" id="telPos">P1</div><div class="telem-key">POS</div></div>
-    <div class="telem-cell"><div class="telem-val" id="telFuel">100%</div><div class="telem-key">FUEL</div></div>
-    <div class="telem-cell"><div class="telem-val" id="telTyre">OK</div><div class="telem-key">TYRE</div></div>
-    <div class="telem-cell"><div class="telem-val" id="telGap">—</div><div class="telem-key">GAP</div></div>
+  <div class="tstrip">
+    <div class="tcell"><div class="tval" id="tpos">P1</div><div class="tkey">POS</div></div>
+    <div class="tcell"><div class="tval" id="tfuel">100%</div><div class="tkey">FUEL</div></div>
+    <div class="tcell"><div class="tval" id="ttyre">OK</div><div class="tkey">TYRE</div></div>
+    <div class="tcell"><div class="tval" id="tgap">—</div><div class="tkey">GAP</div></div>
   </div>
-  <div class="messages-area" id="messagesArea">
-    <div class="msg">
-      <div class="msg-icon system">📡</div>
-      <div class="msg-content">
-        <div class="msg-sender">System</div>
-        <div class="msg-text">Engineer connected. Race session active.</div>
-        <div class="msg-time" id="startTime">—</div>
-      </div>
-    </div>
+  <div class="msgs" id="msgs">
+    <div class="msg2"><div class="micon sys">📡</div><div class="mcontent"><div class="msender">System</div><div class="mtext">Engineer connected. Race session active.</div><div class="mtime" id="starttime">—</div></div></div>
   </div>
-  <div class="speaking-bar">
-    <div class="wave" id="waveAnim">
-      <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-    </div>
-    <div class="speaking-text" id="speakingText">Engineer standing by...</div>
+  <div class="spbar">
+    <div class="wave" id="wave"><div class="wbar"></div><div class="wbar"></div><div class="wbar"></div><div class="wbar"></div><div class="wbar"></div></div>
+    <div class="sptext" id="sptext">Engineer standing by...</div>
   </div>
-  <div class="question-area">
-    <input class="question-input" id="questionInput" placeholder="Ask your engineer..." type="text" />
-    <button class="ask-btn" onclick="askQuestion()">↑</button>
+  <div class="qarea">
+    <input class="qinput" id="qinput" placeholder="Ask your engineer..." type="text"/>
+    <button class="qbtn" onclick="askQ()">↑</button>
   </div>
 </div>
-
-<div class="wallet-toast" id="walletToast"></div>
 
 <script>
-// ── SUPABASE ──
-const SUPA_URL = 'https://ofptqazlbbalebgqtwbr.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcHRxYXpsYmJhbGViZ3F0d2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODUwMzUsImV4cCI6MjA5NTM2MTAzNX0.aiiFgRcpmUBkJkfQSCPTWjT73hVjUaSARVohR80vNhM';
-let supabase;
-try {
-  const lib = window.supabase || window.supabaseJs;
-  if (!lib) throw new Error('Supabase SDK not loaded');
-  supabase = lib.createClient(SUPA_URL, SUPA_KEY, {
-    auth: { flowType: 'pkce', detectSessionInUrl: true, persistSession: true }
-  });
-} catch(e) {
-  document.body.innerHTML = '<div style="color:red;font-family:monospace;padding:40px;background:#000;min-height:100vh"><h2>INIT ERROR</h2><p>' + e.message + '</p><p>Check network / CDN access</p></div>';
-}
-
+// ══ CONFIG ══
+const SURL = 'https://ofptqazlbbalebgqtwbr.supabase.co';
+const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcHRxYXpsYmJhbGViZ3F0d2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODUwMzUsImV4cCI6MjA5NTM2MTAzNX0.aiiFgRcpmUBkJkfQSCPTWjT73hVjUaSARVohR80vNhM';
 const FREE_LIMIT = 3;
+const GOOGLE_URL = `${SURL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent('https://simracingcoach.vercel.app/service.html')}`;
 
-let state = {
-  sim: 'lmu', persona: 'british', ip: '',
-  pollInterval: null, thinkInterval: null,
-  speaking: false, raceData: {}, lastSpokenAt: 0,
-  user: null, plan: 'free', sessionsThisMonth: 0,
-};
+// ══ INIT SUPABASE ══
+let sb;
+try {
+  sb = window.supabase.createClient(SURL, SKEY);
+  document.getElementById('googlebtn').href = GOOGLE_URL;
+} catch(e) {
+  document.body.innerHTML = `<div style="color:red;font-family:monospace;padding:40px;background:#000;min-height:100vh"><h2>SDK Error</h2><p>${e.message}</p></div>`;
+}
 
+// ══ STATE ══
+const ST = { sim:'lmu', persona:'british', ip:'', poll:null, think:null, speaking:false, data:{}, spokenAt:0, user:null, plan:'free', sessions:0 };
 const PERSONAS = {
-  british: { name: 'JAMES', voice: 'en-GB', style: 'Calm, precise, British F1 engineer. Short sentences. Never panics.' },
-  italian: { name: 'MARCO', voice: 'it-IT', style: 'Passionate Italian engineer. Tactical. Energetic but professional.' },
-  german:  { name: 'HANS',  voice: 'de-DE', style: 'German engineer. Ultra technical. Data-focused. Efficient.' },
-  aussie:  { name: 'NICK',  voice: 'en-AU', style: 'Australian engineer. Direct, no nonsense, straight to the point.' },
+  british:{name:'JAMES',voice:'en-GB',style:'Calm, precise British F1 engineer. Short sentences. Never panics.'},
+  italian:{name:'MARCO',voice:'it-IT',style:'Passionate Italian engineer. Tactical. Energetic but professional.'},
+  german: {name:'HANS', voice:'de-DE',style:'German engineer. Ultra technical. Data-focused. Efficient.'},
+  aussie: {name:'NICK', voice:'en-AU',style:'Australian engineer. Direct, no nonsense.'},
 };
 
-// ── SCREENS ──
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+// ══ SCREENS ══
+const show = id => { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); };
+
+// ══ AUTH ══
+let tab = 'login';
+function switchTab(t) {
+  tab = t;
+  document.getElementById('t1').classList.toggle('active', t==='login');
+  document.getElementById('t2').classList.toggle('active', t==='signup');
+  document.getElementById('authbtn').textContent = t==='login' ? 'SIGN IN →' : 'CREATE ACCOUNT →';
+  setMsg('');
 }
-
-// ── AUTH TABS ──
-let currentTab = 'login';
-
-function switchTab(tab) {
-  currentTab = tab;
-  document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
-  document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
-  document.getElementById('authBtn').textContent = tab === 'login' ? 'SIGN IN →' : 'CREATE ACCOUNT →';
-  clearAuthMsg();
+function setMsg(m, type='') {
+  const el = document.getElementById('authmsg');
+  el.textContent = m;
+  el.className = 'msg' + (type ? ' '+type : '');
 }
-
-function showAuthMsg(msg, type) {
-  const el = document.getElementById('authMsg');
-  el.textContent = msg;
-  el.className = 'auth-msg ' + type;
+function setBusy(on) {
+  const b = document.getElementById('authbtn');
+  b.disabled = on;
+  b.classList.toggle('loading', on);
+  if (!on) b.textContent = tab==='login' ? 'SIGN IN →' : 'CREATE ACCOUNT →';
 }
-
-function clearAuthMsg() {
-  document.getElementById('authMsg').className = 'auth-msg';
-}
-
-function setLoading(on) {
-  const btn = document.getElementById('authBtn');
-  btn.disabled = on;
-  btn.classList.toggle('loading', on);
-  if (!on) btn.textContent = currentTab === 'login' ? 'SIGN IN →' : 'CREATE ACCOUNT →';
-}
-
-// ── EMAIL AUTH ──
-async function handleAuth() {
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value;
-  if (!email || !password) { showAuthMsg('Please fill in all fields.', 'error'); return; }
-  setLoading(true); clearAuthMsg();
-
-  if (currentTab === 'login') {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) { showAuthMsg(error.message, 'error'); setLoading(false); return; }
-    await afterLogin(data.user);
+async function doAuth() {
+  const email = document.getElementById('email').value.trim();
+  const pass = document.getElementById('pass').value;
+  if (!email||!pass) { setMsg('Fill in all fields.','error'); return; }
+  setBusy(true); setMsg('');
+  if (tab==='login') {
+    const {data,error} = await sb.auth.signInWithPassword({email,password:pass});
+    if (error) { setMsg(error.message,'error'); setBusy(false); return; }
+    await boot(data.user);
   } else {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) { showAuthMsg(error.message, 'error'); setLoading(false); return; }
-    if (data.user && !data.session) {
-      showAuthMsg('Check your email to confirm your account.', 'success');
-    } else {
-      await afterLogin(data.user);
-    }
+    const {data,error} = await sb.auth.signUp({email,password:pass});
+    if (error) { setMsg(error.message,'error'); setBusy(false); return; }
+    if (!data.session) { setMsg('Check your email to confirm.','success'); setBusy(false); return; }
+    await boot(data.user);
   }
-  setLoading(false);
+  setBusy(false);
 }
 
-// ── GOOGLE ──
-function signInWithGoogle() {
-  // Safari-proof: create and click a real <a> tag
-  const url = 'https://ofptqazlbbalebgqtwbr.supabase.co/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent('https://simracingcoach.vercel.app/service.html');
-  const a = document.createElement('a');
-  a.href = url;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
-// ── SOLANA (Phantom) ──
-async function signInWithSolana() {
-  clearAuthMsg();
-  const provider = window.phantom?.solana || window.solana;
-  if (!provider?.isPhantom) {
-    showAuthMsg('Phantom wallet not found. Install phantom.app', 'info');
-    return;
-  }
-  try {
-    showToast('Connecting Phantom...');
-    const resp = await provider.connect();
-    const pubkey = resp.publicKey.toString();
-    const nonce = `pitwall-${Date.now()}`;
-    const msg = `Sign in to PitWall AI\nWallet: ${pubkey}\nNonce: ${nonce}`;
-    const encoded = new TextEncoder().encode(msg);
-    const { signature } = await provider.signMessage(encoded, 'utf8');
-    const sigHex = Array.from(signature).map(b => b.toString(16).padStart(2,'0')).join('');
-    const walletEmail = `sol_${pubkey.slice(0,8)}@wallet.pitwall.ai`;
-    const walletPass = sigHex.slice(0, 32);
-    let { data, error } = await supabase.auth.signInWithPassword({ email: walletEmail, password: walletPass });
-    if (error) {
-      const s = await supabase.auth.signUp({ email: walletEmail, password: walletPass, options: { data: { wallet_type: 'solana', wallet_address: pubkey } } });
-      if (s.error) { showAuthMsg(s.error.message, 'error'); return; }
-      data = s.data;
-    }
-    showToast('Solana connected ✓');
-    await afterLogin(data.user);
-  } catch (e) {
-    showAuthMsg(e.code === 4001 ? 'Cancelled.' : 'Solana error: ' + e.message, e.code === 4001 ? 'info' : 'error');
-  }
-}
-
-// ── ETHEREUM (MetaMask) ──
-async function signInWithEthereum() {
-  clearAuthMsg();
-  if (!window.ethereum) {
-    showAuthMsg('MetaMask not found. Install metamask.io', 'info');
-    return;
-  }
-  try {
-    showToast('Connecting MetaMask...');
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    const address = accounts[0];
-    const nonce = `pitwall-${Date.now()}`;
-    const msg = `Sign in to PitWall AI\nWallet: ${address}\nNonce: ${nonce}`;
-    const signature = await window.ethereum.request({ method: 'personal_sign', params: [msg, address] });
-    const walletEmail = `eth_${address.slice(2,10)}@wallet.pitwall.ai`;
-    const walletPass = signature.slice(2, 34);
-    let { data, error } = await supabase.auth.signInWithPassword({ email: walletEmail, password: walletPass });
-    if (error) {
-      const s = await supabase.auth.signUp({ email: walletEmail, password: walletPass, options: { data: { wallet_type: 'ethereum', wallet_address: address } } });
-      if (s.error) { showAuthMsg(s.error.message, 'error'); return; }
-      data = s.data;
-    }
-    showToast('Ethereum connected ✓');
-    await afterLogin(data.user);
-  } catch (e) {
-    showAuthMsg(e.code === 4001 ? 'Cancelled.' : 'Ethereum error: ' + e.message, e.code === 4001 ? 'info' : 'error');
-  }
-}
-
-// ── PLAN ──
-async function afterLogin(user) {
+// ══ BOOT (after any login) ══
+async function boot(user) {
   if (!user) return;
-  state.user = user;
-  await loadUserPlan(user);
-  checkAccess();
+  ST.user = user;
+  show('loading');
+  await loadPlan(user);
+  if (ST.plan==='free' && ST.sessions>=FREE_LIMIT) { show('gate'); return; }
+  gotoSetup();
 }
 
-async function loadUserPlan(user) {
-  // Defensive: if profiles table fails, just default to free and continue
+async function loadPlan(user) {
   try {
-    const { data, error } = await supabase.from('profiles').select('plan,sessions_this_month,sessions_reset_at').eq('id', user.id).single();
-    if (error || !data) {
-      // Try insert, ignore error if already exists
-      await supabase.from('profiles').upsert({ id: user.id, plan: 'free', sessions_this_month: 0, sessions_reset_at: new Date().toISOString() }, { onConflict: 'id' });
-      state.plan = 'free'; state.sessionsThisMonth = 0;
+    const {data} = await sb.from('profiles').select('plan,sessions_this_month,sessions_reset_at').eq('id',user.id).single();
+    if (!data) {
+      await sb.from('profiles').upsert({id:user.id,plan:'free',sessions_this_month:0,sessions_reset_at:new Date().toISOString()},{onConflict:'id'});
+      ST.plan='free'; ST.sessions=0;
     } else {
-      const resetAt = new Date(data.sessions_reset_at);
-      const now = new Date();
-      if (now.getMonth() !== resetAt.getMonth() || now.getFullYear() !== resetAt.getFullYear()) {
-        await supabase.from('profiles').update({ sessions_this_month: 0, sessions_reset_at: now.toISOString() }).eq('id', user.id);
-        state.sessionsThisMonth = 0;
-      } else {
-        state.sessionsThisMonth = data.sessions_this_month || 0;
-      }
-      state.plan = data.plan || 'free';
+      const reset = new Date(data.sessions_reset_at), now = new Date();
+      if (now.getMonth()!==reset.getMonth()||now.getFullYear()!==reset.getFullYear()) {
+        await sb.from('profiles').update({sessions_this_month:0,sessions_reset_at:now.toISOString()}).eq('id',user.id);
+        ST.sessions=0;
+      } else { ST.sessions=data.sessions_this_month||0; }
+      ST.plan=data.plan||'free';
     }
-  } catch(e) {
-    // Table error — don't block login, default to free
-    state.plan = 'free'; state.sessionsThisMonth = 0;
-  }
+  } catch(e) { ST.plan='free'; ST.sessions=0; }
 }
 
-function checkAccess() {
-  if (state.plan === 'free' && state.sessionsThisMonth >= FREE_LIMIT) {
-    showScreen('gate');
-  } else {
-    showSetup();
-  }
-}
-
-function showSetup() {
-  showScreen('setup');
-  const meta = state.user?.user_metadata;
-  const label = meta?.wallet_address
-    ? `${(meta.wallet_type||'').toUpperCase()} ${meta.wallet_address.slice(0,6)}...${meta.wallet_address.slice(-4)}`
-    : (state.user?.email || '');
-  document.getElementById('userEmail').textContent = label;
-  const pill = document.getElementById('planPill');
-  pill.textContent = state.plan.toUpperCase();
-  pill.className = 'plan-pill ' + state.plan;
-  const left = Math.max(0, FREE_LIMIT - state.sessionsThisMonth);
-  document.getElementById('sessionsLeft').textContent = state.plan === 'free' && left > 0
-    ? `${left} free session${left !== 1 ? 's' : ''} remaining this month` : '';
+function gotoSetup() {
+  show('setup');
+  const u = ST.user;
+  document.getElementById('uemail').textContent = u?.email || u?.user_metadata?.full_name || '';
+  const pill = document.getElementById('ppill');
+  pill.textContent = ST.plan.toUpperCase(); pill.className='ppill '+ST.plan;
+  const left = Math.max(0, FREE_LIMIT-ST.sessions);
+  document.getElementById('sleft').textContent = ST.plan==='free'&&left>0 ? `${left} free session${left!==1?'s':''} left this month` : '';
 }
 
 async function signOut() {
-  await supabase.auth.signOut();
-  state.user = null; state.plan = 'free'; state.sessionsThisMonth = 0;
-  showScreen('auth');
+  await sb.auth.signOut();
+  ST.user=null; ST.plan='free'; ST.sessions=0;
+  show('auth');
 }
 
-async function incrementSession() {
-  if (state.plan !== 'free' || !state.user) return;
-  state.sessionsThisMonth++;
-  await supabase.from('profiles').update({ sessions_this_month: state.sessionsThisMonth }).eq('id', state.user.id);
-}
-
-// ── TOAST ──
-function showToast(msg) {
-  const el = document.getElementById('walletToast');
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 3000);
-}
-
-// ── SETUP UI ──
-function selectSim(el) {
-  document.querySelectorAll('.sim-btn').forEach(b => b.classList.remove('selected'));
-  el.classList.add('selected'); state.sim = el.dataset.sim;
-}
-
-function selectPersona(el) {
-  document.querySelectorAll('.persona-btn').forEach(b => b.classList.remove('selected'));
-  el.classList.add('selected'); state.persona = el.dataset.persona;
-}
-
-function showError(msg) {
-  const el = document.getElementById('errorMsg');
-  el.textContent = msg; el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 5000);
-}
-
-function addMessage(text, type = 'engineer') {
-  const area = document.getElementById('messagesArea');
-  const now = new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-  const icon = type === 'engineer' ? '🎧' : type === 'pilot' ? '🏎' : '📡';
-  const iconClass = type === 'engineer' ? 'engineer' : 'system';
-  const label = type === 'engineer' ? PERSONAS[state.persona].name : type === 'pilot' ? 'YOU' : 'SYSTEM';
-  const msg = document.createElement('div');
-  msg.className = 'msg';
-  msg.innerHTML = `<div class="msg-icon ${iconClass}">${icon}</div><div class="msg-content"><div class="msg-sender">${label}</div><div class="msg-text">${text}</div><div class="msg-time">${now}</div></div>`;
-  area.appendChild(msg);
-  area.scrollTop = area.scrollHeight;
-}
-
-function updateTelemetry(data) {
-  if (!data) return;
-  const pos = document.getElementById('telPos');
-  const fuel = document.getElementById('telFuel');
-  const tyre = document.getElementById('telTyre');
-  const gap = document.getElementById('telGap');
-  if (data.position) pos.textContent = `P${data.position}`;
-  if (data.fuelPercent !== undefined) {
-    const fp = Math.round(data.fuelPercent);
-    fuel.textContent = `${fp}%`;
-    fuel.className = 'telem-val' + (fp < 15 ? ' danger' : fp < 30 ? ' warn' : '');
-  }
-  if (data.tyreCondition) {
-    tyre.textContent = data.tyreCondition;
-    tyre.className = 'telem-val' + (data.tyreCondition === 'CRIT' ? ' danger' : data.tyreCondition === 'WARN' ? ' warn' : ' good');
-  }
-  if (data.gapAhead !== undefined) {
-    gap.textContent = data.gapAhead === 0 ? 'LEAD' : `${data.gapAhead > 0 ? '+' : ''}${data.gapAhead.toFixed(1)}`;
-  }
-}
-
-// ── TTS ──
-function speak(text) {
-  if (!('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  const voices = window.speechSynthesis.getVoices();
-  const match = voices.find(v => v.lang.startsWith(PERSONAS[state.persona].voice.split('-')[0]));
-  if (match) utter.voice = match;
-  state.speaking = true;
-  document.getElementById('waveAnim').classList.add('active');
-  document.getElementById('speakingText').textContent = text;
-  utter.onend = () => {
-    state.speaking = false;
-    document.getElementById('waveAnim').classList.remove('active');
-    document.getElementById('speakingText').textContent = 'Engineer standing by...';
-  };
-  window.speechSynthesis.speak(utter);
-}
-
-// ── SIM ──
-async function fetchLMU(ip) {
-  const base = `http://${ip}:5397/rest`;
-  const [session, standings] = await Promise.all([
-    fetch(`${base}/watch/sessionInfo`).then(r => r.json()),
-    fetch(`${base}/watch/standings`).then(r => r.json()).catch(() => null),
-  ]);
-  const s = session || {};
-  const p = standings?.entries?.find(e => e.isPlayer) || {};
-  const fuelCap = p.fuelCapacity || 100;
-  const fuelLevel = p.fuelLeft || fuelCap;
-  const tyreWear = p.frontLeftWear || 100;
-  return {
-    position: p.position || 1, totalEntries: standings?.entries?.length || 1,
-    fuelPercent: (fuelLevel / fuelCap) * 100, fuelLevel: fuelLevel.toFixed(1),
-    tyreCondition: tyreWear > 70 ? 'OK' : tyreWear > 40 ? 'WARN' : 'CRIT',
-    tyreWear: tyreWear.toFixed(0), gapAhead: parseFloat((p.timeBehindNext || 0).toFixed(1)),
-    lap: p.lapsCompleted || 0, totalLaps: s.maximumLaps || 0,
-    weather: s.darkCloud > 0.5 ? 'Rain likely' : 'Dry',
-  };
-}
-
-async function fetchSimData() {
-  try {
-    if (state.sim === 'lmu') return await fetchLMU(state.ip);
-    return null;
-  } catch { return null; }
-}
-
-// ── AI ──
-async function callEngineer(prompt, isQuestion = false) {
-  const persona = PERSONAS[state.persona];
-  const system = `You are a sim racing engineer named ${persona.name}. ${persona.style} Max 2 sentences. If nothing useful: reply exactly "SILENT".`;
-  try {
-    const res = await fetch('/api/brain', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ system, prompt, isQuestion }),
-    });
-    return (await res.json()).message || 'SILENT';
-  } catch { return 'SILENT'; }
-}
-
-async function thinkAndAct() {
-  if (state.speaking || Date.now() - state.lastSpokenAt < 25000) return;
-  const d = state.raceData;
-  if (!d?.position) return;
-  const lapsLeft = d.totalLaps > 0 ? d.totalLaps - d.lap : '?';
-  const msg = await callEngineer(`Race: P${d.position}/${d.totalEntries}, fuel ${d.fuelPercent?.toFixed(0)}% (${d.fuelLevel}L), tyres ${d.tyreCondition} (${d.tyreWear}% wear), gap ${d.gapAhead}s, lap ${d.lap}/${d.totalLaps} (${lapsLeft} left), ${d.weather}. Say something useful or SILENT.`);
-  if (msg && msg !== 'SILENT') { addMessage(msg); speak(msg); state.lastSpokenAt = Date.now(); }
-}
-
-async function askQuestion() {
-  const input = document.getElementById('questionInput');
-  const q = input.value.trim();
-  if (!q) return;
-  input.value = '';
-  addMessage(q, 'pilot');
-  const d = state.raceData;
-  const ans = await callEngineer(`Race: P${d.position}/${d.totalEntries}, fuel ${d.fuelPercent?.toFixed(0)}%, tyres ${d.tyreCondition}, gap ${d.gapAhead}s, lap ${d.lap}/${d.totalLaps}, ${d.weather}. Driver asks: "${q}". Answer directly.`, true);
-  if (ans && ans !== 'SILENT') { addMessage(ans); speak(ans); state.lastSpokenAt = Date.now(); }
-}
-
-// ── RACE ──
-async function startRace() {
-  const ip = document.getElementById('ipInput').value.trim();
-  if (!ip) { showError('Enter your sim PC IP address.'); return; }
-  state.ip = ip;
-  document.getElementById('connecting').classList.add('active');
-  document.getElementById('connectBtn').disabled = true;
-  const testData = await fetchSimData();
-  document.getElementById('connecting').classList.remove('active');
-  if (!testData) {
-    document.getElementById('connectBtn').disabled = false;
-    showError('Cannot connect. Check IP and make sure sim is running.');
-    return;
-  }
-  await incrementSession();
-  showScreen('race');
-  const persona = PERSONAS[state.persona];
-  document.getElementById('engineerBadge').textContent = persona.name;
-  document.getElementById('startTime').textContent = new Date().toLocaleTimeString();
-  state.raceData = testData;
-  updateTelemetry(testData);
-  state.pollInterval = setInterval(async () => {
-    const data = await fetchSimData();
-    if (data) { state.raceData = data; updateTelemetry(data); }
-  }, 5000);
-  state.thinkInterval = setInterval(thinkAndAct, 30000);
-  setTimeout(() => {
-    const g = `${persona.name} online. P${testData.position}, fuel ${testData.fuelPercent?.toFixed(0)}%. Let's go.`;
-    addMessage(g); speak(g); state.lastSpokenAt = Date.now();
-  }, 800);
-  document.getElementById('questionInput').addEventListener('keydown', e => { if (e.key === 'Enter') askQuestion(); });
-}
-
-function endRace() {
-  clearInterval(state.pollInterval); clearInterval(state.thinkInterval);
-  window.speechSynthesis?.cancel();
-  state.raceData = {}; state.speaking = false; state.lastSpokenAt = 0;
-  document.getElementById('messagesArea').innerHTML = `<div class="msg"><div class="msg-icon system">📡</div><div class="msg-content"><div class="msg-sender">System</div><div class="msg-text">Engineer connected. Race session active.</div><div class="msg-time" id="startTime">—</div></div></div>`;
-  showSetup();
-}
-
-// ── INIT ──
-(async () => {
+// ══ HANDLE OAUTH RETURN ══
+// Called on page load — detects if we came back from Google
+async function handleOAuthReturn() {
   const hash = window.location.hash;
   const search = window.location.search;
 
-  // PKCE flow — ?code= in URL
-  if (search.includes('code=')) {
-    const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.href);
-    if (data?.session?.user) {
-      window.history.replaceState({}, document.title, '/service.html');
-      await afterLogin(data.session.user);
-      return;
-    }
-  }
-
-  // Implicit flow — #access_token in hash (fallback)
-  if (hash.includes('access_token')) {
-    const params = new URLSearchParams(hash.replace('#', ''));
-    const { data } = await supabase.auth.setSession({
+  // Case 1: implicit flow — #access_token
+  if (hash && hash.includes('access_token')) {
+    show('loading');
+    const params = new URLSearchParams(hash.slice(1));
+    const {data, error} = await sb.auth.setSession({
       access_token: params.get('access_token'),
       refresh_token: params.get('refresh_token') || '',
     });
-    if (data?.session?.user) {
-      window.history.replaceState({}, document.title, '/service.html');
-      await afterLogin(data.session.user);
-      return;
-    }
+    window.history.replaceState({}, '', '/service.html');
+    if (data?.session?.user) { await boot(data.session.user); return true; }
   }
 
-  // Existing session
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.user) {
-    await afterLogin(session.user);
+  // Case 2: PKCE flow — ?code=
+  if (search && search.includes('code=')) {
+    show('loading');
+    const {data, error} = await sb.auth.exchangeCodeForSession(window.location.href);
+    window.history.replaceState({}, '', '/service.html');
+    if (data?.session?.user) { await boot(data.session.user); return true; }
   }
-})();
 
-document.getElementById('authPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleAuth(); });
+  // Case 3: existing session
+  const {data:{session}} = await sb.auth.getSession();
+  if (session?.user) { await boot(session.user); return true; }
+
+  return false;
+}
+
+// ══ SETUP ══
+function selSim(el) { document.querySelectorAll('.simbtn').forEach(b=>b.classList.remove('sel')); el.classList.add('sel'); ST.sim=el.dataset.sim; }
+function selP(el) { document.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('sel')); el.classList.add('sel'); ST.persona=el.dataset.p; }
+function showErr(m) { const e=document.getElementById('errmsg'); e.textContent=m; e.classList.add('show'); setTimeout(()=>e.classList.remove('show'),5000); }
+
+// ══ TELEMETRY ══
+function updateTelem(d) {
+  if (!d) return;
+  if (d.position) document.getElementById('tpos').textContent=`P${d.position}`;
+  if (d.fuelPercent!==undefined) { const fp=Math.round(d.fuelPercent); const el=document.getElementById('tfuel'); el.textContent=`${fp}%`; el.className='tval'+(fp<15?' danger':fp<30?' warn':''); }
+  if (d.tyreCondition) { const el=document.getElementById('ttyre'); el.textContent=d.tyreCondition; el.className='tval'+(d.tyreCondition==='CRIT'?' danger':d.tyreCondition==='WARN'?' warn':' good'); }
+  if (d.gapAhead!==undefined) document.getElementById('tgap').textContent=d.gapAhead===0?'LEAD':`${d.gapAhead>0?'+':''}${d.gapAhead.toFixed(1)}`;
+}
+
+async function fetchLMU(ip) {
+  const base=`http://${ip}:5397/rest`;
+  const [s,st] = await Promise.all([fetch(`${base}/watch/sessionInfo`).then(r=>r.json()), fetch(`${base}/watch/standings`).then(r=>r.json()).catch(()=>null)]);
+  const p=st?.entries?.find(e=>e.isPlayer)||{};
+  const fc=p.fuelCapacity||100, fl=p.fuelLeft||fc, tw=p.frontLeftWear||100;
+  return {position:p.position||1,totalEntries:st?.entries?.length||1,fuelPercent:(fl/fc)*100,fuelLevel:fl.toFixed(1),tyreCondition:tw>70?'OK':tw>40?'WARN':'CRIT',tyreWear:tw.toFixed(0),gapAhead:parseFloat((p.timeBehindNext||0).toFixed(1)),lap:p.lapsCompleted||0,totalLaps:s?.maximumLaps||0,weather:s?.darkCloud>.5?'Rain':'Dry'};
+}
+
+async function fetchSim() {
+  try { if (ST.sim==='lmu') return await fetchLMU(ST.ip); return null; } catch { return null; }
+}
+
+// ══ TTS ══
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  const voices=window.speechSynthesis.getVoices();
+  const match=voices.find(v=>v.lang.startsWith(PERSONAS[ST.persona].voice.split('-')[0]));
+  if (match) u.voice=match;
+  ST.speaking=true;
+  document.getElementById('wave').classList.add('on');
+  document.getElementById('sptext').textContent=text;
+  u.onend=()=>{ ST.speaking=false; document.getElementById('wave').classList.remove('on'); document.getElementById('sptext').textContent='Engineer standing by...'; };
+  window.speechSynthesis.speak(u);
+}
+
+// ══ AI ══
+function addMsg(text, type='eng') {
+  const area=document.getElementById('msgs');
+  const now=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const icon=type==='eng'?'🎧':type==='you'?'🏎':'📡';
+  const cls=type==='eng'?'eng':'sys';
+  const label=type==='eng'?PERSONAS[ST.persona].name:type==='you'?'YOU':'SYSTEM';
+  const d=document.createElement('div'); d.className='msg2';
+  d.innerHTML=`<div class="micon ${cls}">${icon}</div><div class="mcontent"><div class="msender">${label}</div><div class="mtext">${text}</div><div class="mtime">${now}</div></div>`;
+  area.appendChild(d); area.scrollTop=area.scrollHeight;
+}
+
+async function callAI(prompt, isQ=false) {
+  const p=PERSONAS[ST.persona];
+  const sys=`You are sim racing engineer ${p.name}. ${p.style} Max 2 sentences. If nothing useful reply exactly "SILENT".`;
+  try {
+    const r=await fetch('/api/brain',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:sys,prompt,isQuestion:isQ})});
+    return (await r.json()).message||'SILENT';
+  } catch { return 'SILENT'; }
+}
+
+async function think() {
+  if (ST.speaking||Date.now()-ST.spokenAt<25000) return;
+  const d=ST.data; if (!d?.position) return;
+  const left=d.totalLaps>0?d.totalLaps-d.lap:'?';
+  const m=await callAI(`Race: P${d.position}/${d.totalEntries}, fuel ${d.fuelPercent?.toFixed(0)}% (${d.fuelLevel}L), tyres ${d.tyreCondition} (${d.tyreWear}% wear), gap ${d.gapAhead}s, lap ${d.lap}/${d.totalLaps} (${left} left), ${d.weather}. Say something useful or SILENT.`);
+  if (m&&m!=='SILENT') { addMsg(m); speak(m); ST.spokenAt=Date.now(); }
+}
+
+async function askQ() {
+  const inp=document.getElementById('qinput'); const q=inp.value.trim(); if (!q) return; inp.value='';
+  addMsg(q,'you');
+  const d=ST.data;
+  const a=await callAI(`Race: P${d.position}/${d.totalEntries}, fuel ${d.fuelPercent?.toFixed(0)}%, tyres ${d.tyreCondition}, gap ${d.gapAhead}s, lap ${d.lap}/${d.totalLaps}, ${d.weather}. Driver asks: "${q}". Answer directly.`,true);
+  if (a&&a!=='SILENT') { addMsg(a); speak(a); ST.spokenAt=Date.now(); }
+}
+
+// ══ RACE ══
+async function startRace() {
+  const ip=document.getElementById('ipinput').value.trim();
+  if (!ip) { showErr('Enter your sim PC IP address.'); return; }
+  ST.ip=ip;
+  document.getElementById('overlay').classList.add('on');
+  document.getElementById('gobtn').disabled=true;
+  const d=await fetchSim();
+  document.getElementById('overlay').classList.remove('on');
+  if (!d) { document.getElementById('gobtn').disabled=false; showErr('Cannot connect. Check IP and sim is running.'); return; }
+  // Log session
+  if (ST.plan==='free'&&ST.user) { ST.sessions++; await sb.from('profiles').update({sessions_this_month:ST.sessions}).eq('id',ST.user.id); }
+  show('race');
+  const p=PERSONAS[ST.persona];
+  document.getElementById('rbadge').textContent=p.name;
+  document.getElementById('starttime').textContent=new Date().toLocaleTimeString();
+  ST.data=d; updateTelem(d);
+  ST.poll=setInterval(async()=>{ const nd=await fetchSim(); if (nd){ST.data=nd;updateTelem(nd);} },5000);
+  ST.think=setInterval(think,30000);
+  setTimeout(()=>{ const g=`${p.name} online. P${d.position}, fuel ${d.fuelPercent?.toFixed(0)}%. Let's go.`; addMsg(g); speak(g); ST.spokenAt=Date.now(); },800);
+  document.getElementById('qinput').addEventListener('keydown',e=>{ if(e.key==='Enter') askQ(); });
+}
+
+function endRace() {
+  clearInterval(ST.poll); clearInterval(ST.think);
+  window.speechSynthesis?.cancel();
+  ST.data={}; ST.speaking=false; ST.spokenAt=0;
+  document.getElementById('msgs').innerHTML=`<div class="msg2"><div class="micon sys">📡</div><div class="mcontent"><div class="msender">System</div><div class="mtext">Engineer connected. Race session active.</div><div class="mtime" id="starttime">—</div></div></div>`;
+  gotoSetup();
+}
+
+// ══ START ══
+document.getElementById('pass').addEventListener('keydown',e=>{ if(e.key==='Enter') doAuth(); });
 window.speechSynthesis?.getVoices();
-window.speechSynthesis?.addEventListener('voiceschanged', () => window.speechSynthesis.getVoices());
+window.speechSynthesis?.addEventListener('voiceschanged',()=>window.speechSynthesis.getVoices());
+handleOAuthReturn();
 </script>
 </body>
 </html>
