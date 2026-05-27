@@ -576,26 +576,16 @@ async function handleAuth() {
 }
 
 // ── GOOGLE ──
-async function signInWithGoogle() {
+function signInWithGoogle() {
   clearAuthMsg();
-  showAuthMsg('Connecting to Google...', 'info');
-  try {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: 'https://simracingcoach.vercel.app/service.html' },
-    });
-    if (error) {
-      showAuthMsg('Google error: ' + error.message, 'error');
-      return;
-    }
-    if (data?.url) {
-      window.location.href = data.url;
-    } else {
-      showAuthMsg('No redirect URL. Check Supabase Google provider is enabled.', 'error');
-    }
-  } catch(e) {
-    showAuthMsg('Exception: ' + e.message, 'error');
-  }
+  showAuthMsg('Opening Google...', 'info');
+  // Safari fix: build URL directly, no async
+  const params = new URLSearchParams({
+    provider: 'google',
+    redirect_to: 'https://simracingcoach.vercel.app/service.html',
+  });
+  const url = 'https://ofptqazlbbalebgqtwbr.supabase.co/auth/v1/authorize?' + params.toString();
+  window.location.href = url;
 }
 
 // ── SOLANA (Phantom) ──
