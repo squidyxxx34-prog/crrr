@@ -892,9 +892,31 @@ function endRace() {
 
 // ── INIT ──
 (async () => {
+  // Handle OAuth redirect (Google returns with #access_token or ?code=)
+  const hash = window.location.hash;
+  const search = window.location.search;
+  if (hash.includes('access_token') || search.includes('code=')) {
+    // Let Supabase parse the OAuth callback
+    const { data, error } = await supabase.auth.getSession();
+    if (data?.session?.user) {
+      // Clean URL
+      window.history.replaceState({}, document.title, '/service.html');
+      await afterLogin(data.session.user);
+      return;
+    }
+  }
+  // Normal session check
   const { data: { session } } = await supabase.auth.getSession();
   if (session?.user) await afterLogin(session.user);
 })();
+
+// Also listen for auth state changes (catches OAuth redirect)
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+    window.history.replaceState({}, document.title, '/service.html');
+    await afterLogin(session.user);
+  }
+});
 
 document.getElementById('authPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleAuth(); });
 window.speechSynthesis?.getVoices();
