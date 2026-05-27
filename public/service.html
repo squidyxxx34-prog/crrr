@@ -899,26 +899,16 @@ function endRace() {
 
 // ── INIT ──
 (async () => {
-  // If URL has #access_token, Supabase needs to exchange it — call getSession which triggers parsing
-  if (window.location.hash.includes('access_token')) {
-    // Small delay to let Supabase SDK parse the hash
-    await new Promise(r => setTimeout(r, 500));
-  }
-
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.user) {
-    window.history.replaceState({}, document.title, '/service.html');
-    await afterLogin(session.user);
-    return;
-  }
-
-  // Fallback: listen for state change (catches slower OAuth flows)
-  supabase.auth.onAuthStateChange(async (event, session) => {
-    if ((event === 'SIGNED_IN') && session?.user) {
-      window.history.replaceState({}, document.title, '/service.html');
+  // Retry up to 5 times — session may take a moment to persist after OAuth
+  for (let i = 0; i < 5; i++) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
       await afterLogin(session.user);
+      return;
     }
-  });
+    await new Promise(r => setTimeout(r, 400));
+  }
+  // No session found — stay on auth screen (already shown by default)
 })();
 
 document.getElementById('authPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleAuth(); });
