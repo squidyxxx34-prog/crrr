@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PitWall — Signing in...</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body{background:#080808;color:#f2f2f2;font-family:monospace;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:20px}
+    .spinner{width:40px;height:40px;border:2px solid #222;border-top-color:#e8001d;border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    p{color:#555;font-size:13px;letter-spacing:2px}
+  </style>
+</head>
+<body>
+  <div class="spinner"></div>
+  <p>SIGNING IN...</p>
+  <script>
+    const sb = window.supabase.createClient(
+      'https://ofptqazlbbalebgqtwbr.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcHRxYXpsYmJhbGViZ3F0d2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODUwMzUsImV4cCI6MjA5NTM2MTAzNX0.aiiFgRcpmUBkJkfQSCPTWjT73hVjUaSARVohR80vNhM'
+    );
+
+    (async () => {
+      // Wait for Supabase to parse the hash
+      await new Promise(r => setTimeout(r, 800));
+      const { data: { session } } = await sb.auth.getSession();
+      if (session?.user) {
+        window.location.replace('/service.html');
+      } else {
+        // Try listening
+        sb.auth.onAuthStateChange((event, session) => {
+          if (event === 'SIGNED_IN' && session?.user) {
+            window.location.replace('/service.html');
+          }
+        });
+        // Timeout fallback
+        setTimeout(() => { window.location.replace('/service.html'); }, 3000);
+      }
+    })();
+  </script>
+</body>
+</html>
