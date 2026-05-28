@@ -755,6 +755,30 @@
   <div class="footer-logo">PITWALL<span>.</span>AI</div>
   <div class="footer-copy">© 2026 — Built for sim racers</div>
 </footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const supabase = window.supabase.createClient(
+    'https://ofptqazlbbalebgqtwbr.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcHRxYXpsYmJhbGViZ3F0d2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODUwMzUsImV4cCI6MjA5NTM2MTAzNX0.aiiFgRcpmUBkJkfQSCPTWjT73hVjUaSARVohR80vNhM'
+  );
 
+  async function checkout(plan) {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      window.location.href = 'service.html';
+      return;
+    }
+
+    const res = await fetch('/api/checkout.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.id, plan })
+    });
+
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
+  }
+</script>
 </body>
 </html>
