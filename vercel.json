@@ -7,10 +7,7 @@
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/(.*)", "dest": "/public/$1" }
-  ]
-}
-
-{
+  ],
   "functions": {
     "api/webhook.js": {
       "bodyParser": false
