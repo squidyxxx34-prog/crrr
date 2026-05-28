@@ -529,7 +529,17 @@ function endRace() {
 document.getElementById('pass').addEventListener('keydown',e=>{ if(e.key==='Enter') doAuth(); });
 window.speechSynthesis?.getVoices();
 window.speechSynthesis?.addEventListener('voiceschanged',()=>window.speechSynthesis.getVoices());
-handleOAuthReturn();
+async function gateCheckout(plan) {
+  if (!ST.user) return;
+  const res = await fetch('/api/checkout.js', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: ST.user.id, plan })
+  });
+  const data = await res.json();
+  if (data.url) window.location.href = data.url;
+}
+  handleOAuthReturn();
 </script>
 </body>
 </html>
