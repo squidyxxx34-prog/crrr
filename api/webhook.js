@@ -46,7 +46,7 @@ module.exports = async function handler(req, res) {
 async function updateStatus(userId, status) {
   if (!userId) return;
   await supabase
-    .from('users')
+    .from('profiles')
     .update({ subscription_status: status })
     .eq('id', userId);
 }
