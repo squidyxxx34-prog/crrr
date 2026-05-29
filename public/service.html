@@ -380,6 +380,8 @@ function gotoSetup() {
   pill.textContent = ST.plan.toUpperCase(); pill.className='ppill '+ST.plan;
   const left = Math.max(0, FREE_LIMIT-ST.sessions);
   document.getElementById('sleft').textContent = ST.plan==='free'&&left>0 ? `${left} free session${left!==1?'s':''} left this month` : '';
+  // Affiche boutons upgrade si plan free
+  document.getElementById('upgrade-btns').style.display = ST.plan === 'free' ? 'flex' : 'none';
 }
 
 async function signOut() {
