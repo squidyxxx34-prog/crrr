@@ -10,8 +10,8 @@ module.exports = async function handler(req, res) {
   if (!userId) return res.status(400).json({ error: 'Missing userId' });
 
   const priceId = plan === 'pro'
-  ? process.env.STRIPE_PRICE_ID_2
-  : process.env.STRIPE_PRICE_ID_1;
+  ? process.env.STRIPE_PRICE_ID_1
+  : process.env.STRIPE_PRICE_ID_2;
 
   if (!priceId) return res.status(400).json({ error: 'Invalid plan' });
 
