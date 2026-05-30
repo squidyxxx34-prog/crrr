@@ -763,9 +763,11 @@
   );
 
   function selectPlan(plan) {
-    localStorage.setItem('selected_plan', plan);
-    window.location.href = 'service.html';
-  }
+  alert('plan: ' + plan);
+  localStorage.setItem('selected_plan', plan);
+  window.location.href = 'service.html';
+}
+
 
   async function checkout(plan) {
     const { data: { user } } = await supabase.auth.getUser();
