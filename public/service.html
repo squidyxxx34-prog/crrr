@@ -280,6 +280,11 @@
 </div>
 
 <script>
+
+// Détecte plan depuis URL
+const urlPlan = new URLSearchParams(window.location.search).get('plan');
+if (urlPlan) localStorage.setItem('selected_plan', urlPlan);
+  
 // ══ CONFIG ══
 const SURL = 'https://ofptqazlbbalebgqtwbr.supabase.co';
 const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcHRxYXpsYmJhbGViZ3F0d2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3ODUwMzUsImV4cCI6MjA5NTM2MTAzNX0.aiiFgRcpmUBkJkfQSCPTWjT73hVjUaSARVohR80vNhM';
