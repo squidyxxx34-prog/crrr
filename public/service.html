@@ -351,6 +351,14 @@ async function boot(user) {
   ST.user = user;
   show('loading');
   await loadPlan(user);
+
+  const selectedPlan = localStorage.getItem('selected_plan');
+  if (selectedPlan) {
+    localStorage.removeItem('selected_plan');
+    await gateCheckout(selectedPlan);
+    return;
+  }
+
   if (ST.plan==='free' && ST.sessions>=FREE_LIMIT) { show('gate'); return; }
   gotoSetup();
 }
