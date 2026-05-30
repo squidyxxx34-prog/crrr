@@ -727,7 +727,7 @@
           <li class="active">Post-race debrief (soon)</li>
           <li>Team mode</li>
         </ul>
-        <a href="service.html#pricing" class="plan-btn primary">Get Pro →</a>
+        <button onclick="selectPlan('pro')" class="plan-btn primary">Get Pro →</button>
       </div>
 
       <div class="plan">
@@ -743,7 +743,7 @@
           <li class="active">Endurance relay mode</li>
           <li class="active">Priority support</li>
         </ul>
-        <a href="service.html#pricing" class="plan-btn outline">Get Team</a>
+        <button onclick="selectPlan('team')" class="plan-btn outline">Get Team</button>
       </div>
 
     </div>
@@ -779,6 +779,11 @@
     const data = await res.json();
     if (data.url) window.location.href = data.url;
   }
+  function selectPlan(plan) {
+  localStorage.setItem('selected_plan', plan);
+  window.location.href = 'service.html';
+  }
+
 </script>
 </body>
 </html>
