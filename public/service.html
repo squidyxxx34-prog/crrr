@@ -450,16 +450,22 @@ function updateTelem(d) {
   if (d.gapAhead!==undefined) document.getElementById('tgap').textContent=d.gapAhead===0?'LEAD':`${d.gapAhead>0?'+':''}${d.gapAhead.toFixed(1)}`;
 }
 
-async function fetchLMU(ip) {
-  const base=`http://${ip}:5397/rest`;
-  const [s,st] = await Promise.all([fetch(`${base}/watch/sessionInfo`).then(r=>r.json()), fetch(`${base}/watch/standings`).then(r=>r.json()).catch(()=>null)]);
-  const p=st?.entries?.find(e=>e.isPlayer)||{};
-  const fc=p.fuelCapacity||100, fl=p.fuelLeft||fc, tw=p.frontLeftWear||100;
-  return {position:p.position||1,totalEntries:st?.entries?.length||1,fuelPercent:(fl/fc)*100,fuelLevel:fl.toFixed(1),tyreCondition:tw>70?'OK':tw>40?'WARN':'CRIT',tyreWear:tw.toFixed(0),gapAhead:parseFloat((p.timeBehindNext||0).toFixed(1)),lap:p.lapsCompleted||0,totalLaps:s?.maximumLaps||0,weather:s?.darkCloud>.5?'Rain':'Dry'};
-}
-
 async function fetchSim() {
-  try { if (ST.sim==='lmu') return await fetchLMU(ST.ip); return null; } catch { return null; }
+  // Vercel proxy — avoids CORS + mixed content (HTTPS→HTTP)
+  try {
+    const res = await fetch(`/api/sim?ip=${encodeURIComponent(ST.ip)}`, {
+      signal: AbortSignal.timeout(6000)
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      console.warn('Sim error:', data.error);
+      return null;
+    }
+    return data;
+  } catch(e) {
+    console.warn('fetchSim failed:', e.message);
+    return null;
+  }
 }
 
 // ══ TTS ══
