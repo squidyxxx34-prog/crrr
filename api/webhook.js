@@ -47,6 +47,10 @@ async function updateStatus(userId, status) {
   if (!userId) return;
   await supabase
     .from('profiles')
-    .update({ subscription_status: status })
+    .update({ 
+      subscription_status: status,
+      plan: status === 'active' ? 'pro' : 'free'  // 👈 ajoute ça
+    })
     .eq('id', userId);
 }
+
