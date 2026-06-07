@@ -22,19 +22,14 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: |
-          cd daemon
-          pip install requests keyboard pygame pyinstaller
-
-      - name: List daemon files (debug)
-        run: |
-          dir daemon
-          dir daemon\pitwall
+        run: pip install requests keyboard pygame pyinstaller
 
       - name: Build Setup EXE (with console)
         run: |
           cd daemon
           pyinstaller --onefile --console --name PitWallAI-Setup --add-data "pitwall;pitwall" pitwall_setup_entry.py
+          del /f /q *.spec
+          rmdir /s /q build
 
       - name: Build Daemon EXE (headless)
         run: |
