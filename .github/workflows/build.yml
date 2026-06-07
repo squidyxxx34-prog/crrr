@@ -22,42 +22,23 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: |
-          pip install requests keyboard pygame pyinstaller
-          pip install pywin32
+        run: pip install requests keyboard pygame pyinstaller pywin32
 
       - name: Build Setup EXE
         run: |
           cd daemon
-          python -m PyInstaller `
-            --onefile `
-            --console `
-            --name PitWallAI-Setup `
-            --add-data "pitwall;pitwall" `
-            --hidden-import requests `
-            --hidden-import json `
-            --hidden-import pathlib `
-            pitwall_setup_entry.py
+          python -m PyInstaller --onefile --console --name PitWallAI-Setup --add-data "pitwall;pitwall" --hidden-import requests pitwall_setup_entry.py
 
       - name: Clean between builds
+        shell: pwsh
         run: |
-          cd daemon
-          if exist "*.spec" del /f /q "*.spec"
-          if exist "build" rmdir /s /q "build"
+          Remove-Item -Path "daemon\*.spec" -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path "daemon\build" -Recurse -Force -ErrorAction SilentlyContinue
 
       - name: Build Daemon EXE
         run: |
           cd daemon
-          python -m PyInstaller `
-            --onefile `
-            --noconsole `
-            --name PitWallAI `
-            --add-data "pitwall;pitwall" `
-            --hidden-import requests `
-            --hidden-import keyboard `
-            --hidden-import pygame `
-            --hidden-import ctypes `
-            pitwall_daemon_entry.py
+          python -m PyInstaller --onefile --noconsole --name PitWallAI --add-data "pitwall;pitwall" --hidden-import requests --hidden-import keyboard --hidden-import pygame --hidden-import ctypes pitwall_daemon_entry.py
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
