@@ -22,27 +22,24 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests keyboard pygame pyinstaller
+        run: |
+          cd daemon
+          pip install requests keyboard pygame pyinstaller
+
+      - name: List daemon files (debug)
+        run: |
+          dir daemon
+          dir daemon\pitwall
 
       - name: Build Setup EXE (with console)
-        working-directory: daemon
         run: |
-          pyinstaller `
-            --onefile `
-            --console `
-            --name PitWallAI-Setup `
-            --add-data "pitwall;pitwall" `
-            pitwall_setup_entry.py
+          cd daemon
+          pyinstaller --onefile --console --name PitWallAI-Setup --add-data "pitwall;pitwall" pitwall_setup_entry.py
 
       - name: Build Daemon EXE (headless)
-        working-directory: daemon
         run: |
-          pyinstaller `
-            --onefile `
-            --noconsole `
-            --name PitWallAI `
-            --add-data "pitwall;pitwall" `
-            pitwall_daemon_entry.py
+          cd daemon
+          pyinstaller --onefile --noconsole --name PitWallAI --add-data "pitwall;pitwall" pitwall_daemon_entry.py
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
