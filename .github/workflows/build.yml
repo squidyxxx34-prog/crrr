@@ -22,10 +22,19 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: |
-          pip install requests keyboard pygame pyinstaller
+        run: pip install requests keyboard pygame pyinstaller
 
-      - name: Build EXE
+      - name: Build Setup EXE (with console)
+        working-directory: daemon
+        run: |
+          pyinstaller `
+            --onefile `
+            --console `
+            --name PitWallAI-Setup `
+            --add-data "pitwall;pitwall" `
+            pitwall_setup_entry.py
+
+      - name: Build Daemon EXE (headless)
         working-directory: daemon
         run: |
           pyinstaller `
@@ -33,11 +42,13 @@ jobs:
             --noconsole `
             --name PitWallAI `
             --add-data "pitwall;pitwall" `
-            pitwall_launcher.py
+            pitwall_daemon_entry.py
 
-      - name: Upload EXE artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: PitWallAI-Windows
-          path: daemon/dist/PitWallAI.exe
+          path: |
+            daemon/dist/PitWallAI-Setup.exe
+            daemon/dist/PitWallAI.exe
           retention-days: 30
