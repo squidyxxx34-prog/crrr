@@ -309,15 +309,19 @@ class ACCReader:
                 ctypes.windll.kernel32.CloseHandle(getattr(self, attr))
 
 # ── LMU / rFactor2 ───────────────────────────────────────
-LMU_MEM_NAME = '$rFactor2SMMP_Buffer$'
+LMU_MEM_NAMES = ['$rFactor2SMMP_Buffer1$', '$rFactor2SMMP_Buffer$', 'Local\\$rFactor2SMMP_Buffer1$']
 
 class LMUReader:
     def connect(self) -> bool:
         try:
-            self.hmap = ctypes.windll.kernel32.OpenFileMappingW(0x0004, False, LMU_MEM_NAME)
-            if not self.hmap: return False
-            self.buf = ctypes.windll.kernel32.MapViewOfFile(self.hmap, 0x0004, 0, 0, 0)
-            return bool(self.buf)
+            for name in LMU_MEM_NAMES:
+                self.hmap = ctypes.windll.kernel32.OpenFileMappingW(0x0004, False, name)
+                if self.hmap:
+                    self.buf = ctypes.windll.kernel32.MapViewOfFile(self.hmap, 0x0004, 0, 0, 0)
+                    if self.buf:
+                        log.info(f'LMU connected via: {name}')
+                        return True
+            return False
         except:
             return False
 
@@ -498,6 +502,14 @@ class PitWallDaemon:
                     return True
                 reader.disconnect()
 
+        # Try to list available shared memory for debug
+        try:
+            import subprocess
+            result = subprocess.run(['powershell', '-Command',
+                'Get-Process | Where-Object {$_.Name -match "iRacing|LMU|AC2|acs"} | Select-Object Name'],
+                capture_output=True, text=True, timeout=3)
+            log.info(f'Running sim processes: {result.stdout.strip() or "none found"}')
+        except: pass
         log.warning('⚠️  No supported sim detected (iRacing / ACC / LMU). Retrying...')
         return False
 
