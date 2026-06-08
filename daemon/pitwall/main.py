@@ -309,7 +309,7 @@ class ACCReader:
                 ctypes.windll.kernel32.CloseHandle(getattr(self, attr))
 
 # ── LMU / rFactor2 ───────────────────────────────────────
-LMU_MEM_NAMES = ['$rFactor2SMMP_Buffer1$', '$rFactor2SMMP_Buffer$', 'Local\\$rFactor2SMMP_Buffer1$']
+LMU_MEM_NAMES = ['$LMU_SMM$', '$rFactor2SMMP_Buffer1$', '$rFactor2SMMP_Buffer$', 'Local\\$rFactor2SMMP_Buffer1$', 'Local\\$LMU_SMM$']
 
 class LMUReader:
     def connect(self) -> bool:
@@ -327,19 +327,36 @@ class LMUReader:
 
     def read(self) -> dict | None:
         try:
-            # rFactor2/LMU shared memory layout (simplified offsets)
-            # Fuel: offset 0x88 (float)
-            fuel  = ctypes.c_float.from_address(self.buf + 0x88).value
-            # Position, lap from scoring
-            pos   = ctypes.c_int.from_address(self.buf + 0x200).value or 1
-            lap   = ctypes.c_int.from_address(self.buf + 0x204).value
-            total = ctypes.c_int.from_address(self.buf + 0x208).value or 1
-            gap   = ctypes.c_double.from_address(self.buf + 0x210).value
-            # Tyre wear front left
-            tw    = ctypes.c_float.from_address(self.buf + 0x300).value
-            if tw <= 0 or tw > 100: tw = 90.0
-            tyre_cond = 'OK' if tw > 70 else ('WARN' if tw > 40 else 'CRIT')
-            fuel_pct  = min(100.0, (fuel / 120.0) * 100)
+            # rFactor2/LMU Telemetry buffer - fuel at offset 212 (float, after header)
+            # Based on rF2SharedMemoryMapPlugin layout
+            # Telemetry struct starts at offset 0
+            # mFuel is at byte offset 212 in rF2VehicleTelemetry
+            fuel = ctypes.c_float.from_address(self.buf + 212).value
+
+            # Scoring buffer at large offset
+            # Try to read basic values safely
+            pos   = ctypes.c_int.from_address(self.buf + 0x400).value
+            total = ctypes.c_int.from_address(self.buf + 0x404).value
+            lap   = ctypes.c_int.from_address(self.buf + 0x408).value
+
+            if pos <= 0 or pos > 200: pos = 1
+            if total <= 0 or total > 200: total = 1
+            if lap < 0: lap = 0
+
+            # Tyre wear (front left) 
+            tw = ctypes.c_float.from_address(self.buf + 0x500).value
+            if tw <= 0 or tw > 1.0:
+                tw_pct = 90.0  # default if invalid
+            else:
+                tw_pct = tw * 100.0
+
+            tyre_cond = 'OK' if tw_pct > 70 else ('WARN' if tw_pct > 40 else 'CRIT')
+            fuel_pct  = min(100.0, max(0.0, (fuel / 120.0) * 100))
+
+            # Validate fuel makes sense
+            if fuel < 0 or fuel > 200:
+                fuel = 50.0
+                fuel_pct = 50.0
 
             return {
                 'sim':          'LMU',
@@ -348,8 +365,8 @@ class LMUReader:
                 'fuelPercent':  round(fuel_pct, 1),
                 'fuelLevel':    round(fuel, 2),
                 'tyreCondition':tyre_cond,
-                'tyreWear':     round(tw, 1),
-                'gapAhead':     round(abs(gap), 2),
+                'tyreWear':     round(tw_pct, 1),
+                'gapAhead':     0.0,
                 'lap':          lap,
                 'totalLaps':    0,
                 'weather':      'Dry',
