@@ -201,23 +201,36 @@ class LMUReader:
                 return True
         return False
     def read(self):
-        if not self.b: return None
+        if not self.b: 
+            log.debug('LMU buf is None')
+            return None
         try:
             lap = shm_int(self.b, 24)
+            log.debug(f'LMU lap read: {lap}')
             # Try multiple fuel offsets
             fuel = 50.0
             for off in [212, 228, 244, 260, 276]:
-                v = shm_float(self.b, off)
-                if 0.1 < v < 200:
-                    fuel = v; break
+                try:
+                    v = shm_float(self.b, off)
+                    log.debug(f'LMU fuel offset {off}: {v}')
+                    if 0.1 < v < 200:
+                        fuel = v
+                        log.debug(f'LMU using fuel: {fuel}')
+                        break
+                except Exception as e:
+                    log.debug(f'LMU fuel offset {off} failed: {e}')
             fp = min(100.0, max(0.0, (fuel / 120.0) * 100))
+            log.debug(f'LMU read success: lap={lap} fuel={fuel} fp={fp}')
             return {'sim': 'LMU', 'position': 1, 'totalEntries': 20,
                     'fuelPercent': round(fp, 1), 'fuelLevel': round(fuel, 2),
                     'tyreCondition': 'OK', 'tyreWear': 90.0,
                     'gapAhead': 0.0, 'lap': max(0, lap), 'totalLaps': 0,
                     'weather': 'Dry', 'trackName': ''}
         except Exception as e:
-            log.debug(f'LMU: {e}'); return None
+            log.error(f'LMU read fatal: {e}')
+            import traceback
+            log.error(traceback.format_exc())
+            return None
     def disconnect(self): shm_close(self.h, self.b); self.h = self.b = None
 
 # ══════════════════════════════════════
