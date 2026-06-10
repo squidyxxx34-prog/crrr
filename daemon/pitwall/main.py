@@ -60,15 +60,24 @@ def play_audio(data):
 def tts(text, voice, key):
     try:
         import subprocess
-        # Escape single quotes for PowerShell
-        escaped_text = text.replace("'", "''")
-        ps_cmd = f"Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('{escaped_text}')"
+        import tempfile
+        # Write text to temp file to avoid quote issues
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+            f.write(text)
+            temp_file = f.name
+        # PowerShell reads from file
+        ps_cmd = f"Add-Type -AssemblyName System.Speech; $text = Get-Content '{temp_file}'; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak($text)"
         subprocess.Popen(
             ["powershell", "-NoProfile", "-Command", ps_cmd],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             creationflags=0x08000000
         )
+        import os
+        try:
+            os.remove(temp_file)
+        except:
+            pass
         log.info(f"TTS: {text[:50]}")
     except Exception as e:
         log.warning(f"TTS: {e}")
