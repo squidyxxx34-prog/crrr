@@ -58,26 +58,29 @@ def play_audio(data):
 # ── GROQ ──
 def tts(text, voice, key):
     try:
-        # ElevenLabs API (free: 10k chars/month)
-        ELEVEN_KEY = 'sk_e9dffd58b24cdc0b79548be79bee3c5733d0e9650b5c71f4'
-        ELEVEN_VOICE = '21m00Tcm4TlvDq8ikWAM'  # Default voice (presets/default_en)
-        
-        r = requests.post(
-            f'https://api.elevenlabs.io/v1/text-to-speech/{ELEVEN_VOICE}',
-            headers={
-                'xi-api-key': ELEVEN_KEY,
-                'Content-Type': 'application/json',
-            },
-            json={'text': text, 'model_id': 'eleven_monolingual_v1'},
-            timeout=10,
-        )
-        if r.status_code == 200:
-            play_audio(r.content)
-            log.info(f'TTS: {text[:50]}')
-        else:
-            log.warning(f'TTS {r.status_code}: {r.text[:100]}')
+        # Google Text-to-Speech (free, unlimited)
+        from gtts import gTTS
+        tts_obj = gTTS(text=text, lang='en', slow=False)
+        tts_obj.write_to_fp(io.BytesIO())  # Check if works
+        audio_fp = io.BytesIO()
+        tts_obj.write_to_fp(audio_fp)
+        audio_fp.seek(0)
+        # Convert MP3 to WAV for pygame
+        import subprocess
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as tmp_mp3:
+            tmp_mp3.write(audio_fp.getvalue())
+            tmp_mp3_path = tmp_mp3.name
+        try:
+            subprocess.run(['ffmpeg', '-i', tmp_mp3_path, '-acodec', 'pcm_s16le', '-ar', '44100', '-f', 'wav', '-'], 
+                          capture_output=True, timeout=5, check=False)
+        except:
+            pass  # ffmpeg not available
+        import os
+        os.remove(tmp_mp3_path)
+        log.info(f'TTS: {text[:50]}')
     except Exception as e:
-        log.error(f'TTS: {e}')
+        log.warning(f'TTS offline: {e}')
 
 def ask_ai(system, prompt, key):
     try:
