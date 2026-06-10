@@ -60,7 +60,7 @@ def tts(text, voice, key):
     try:
         # ElevenLabs API (free: 10k chars/month)
         ELEVEN_KEY = 'sk_e9dffd58b24cdc0b79548be79bee3c5733d0e9650b5c71f4'
-        ELEVEN_VOICE = 'Rachel'  # English voice
+        ELEVEN_VOICE = '21m00Tcm4TlvDq8ikWAM'  # Default voice (presets/default_en)
         
         r = requests.post(
             f'https://api.elevenlabs.io/v1/text-to-speech/{ELEVEN_VOICE}',
