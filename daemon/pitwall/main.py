@@ -56,31 +56,20 @@ def play_audio(data):
         log.error(f'Audio: {e}')
 
 # ── GROQ ──
+# Simplified TTS function using Windows SAPI5
 def tts(text, voice, key):
     try:
-        # Google Text-to-Speech (free, unlimited)
-        from gtts import gTTS
-        tts_obj = gTTS(text=text, lang='en', slow=False)
-        tts_obj.write_to_fp(io.BytesIO())  # Check if works
-        audio_fp = io.BytesIO()
-        tts_obj.write_to_fp(audio_fp)
-        audio_fp.seek(0)
-        # Convert MP3 to WAV for pygame
         import subprocess
-        import tempfile
-        with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as tmp_mp3:
-            tmp_mp3.write(audio_fp.getvalue())
-            tmp_mp3_path = tmp_mp3.name
-        try:
-            subprocess.run(['ffmpeg', '-i', tmp_mp3_path, '-acodec', 'pcm_s16le', '-ar', '44100', '-f', 'wav', '-'], 
-                          capture_output=True, timeout=5, check=False)
-        except:
-            pass  # ffmpeg not available
-        import os
-        os.remove(tmp_mp3_path)
+        # Use PowerShell to call Windows SAPI5
+        ps_command = f'Add-Type –AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak(\'{text.replace("'", "''")}\')'
+        subprocess.Popen(['powershell', '-Command', ps_command], 
+                        stdout=subprocess.DEVNULL, 
+                        stderr=subprocess.DEVNULL,
+                        creationflags=0x08000000)
         log.info(f'TTS: {text[:50]}')
     except Exception as e:
-        log.warning(f'TTS offline: {e}')
+        log.warning(f'TTS: {e}')
+
 
 def ask_ai(system, prompt, key):
     try:
