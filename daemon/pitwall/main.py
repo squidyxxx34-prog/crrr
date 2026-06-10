@@ -60,16 +60,14 @@ def play_audio(data):
 def tts(text, voice, key):
     try:
         import subprocess
-        # Use PowerShell to call Windows SAPI5
-        ps_command = f'Add-Type –AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak(\'{text.replace("'", "''")}\')'
-        subprocess.Popen(['powershell', '-Command', ps_command], 
-                        stdout=subprocess.DEVNULL, 
-                        stderr=subprocess.DEVNULL,
-                        creationflags=0x08000000)
-        log.info(f'TTS: {text[:50]}')
+        # Windows SAPI5 via PowerShell
+        cmd = ["powershell", "-NoProfile", "-Command", 
+               "Add-Type -AssemblyName System.Speech; " +
+               "(New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak(@'" + text + "@')"]
+        subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=0x08000000)
+        log.info(f"TTS: {text[:50]}")
     except Exception as e:
-        log.warning(f'TTS: {e}')
-
+        log.warning(f"TTS: {e}")
 
 def ask_ai(system, prompt, key):
     try:
