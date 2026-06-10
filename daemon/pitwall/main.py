@@ -58,24 +58,26 @@ def play_audio(data):
 # ── GROQ ──
 def tts(text, voice, key):
     try:
-        # Use Google Cloud Text-to-Speech (free tier, no auth needed via public API)
-        # Alternative: Use pyttsx3 (offline, system voices)
-        import pyttsx3
-        engine = pyttsx3.init()
-        engine.setProperty('rate', 150)  # speech rate
-        # Map personas to voices
-        voices = engine.getProperty('voices')
-        if 'en' in voice:  # james, nick (en)
-            engine.setVoice(voices[1].id if len(voices) > 1 else voices[0].id)
-        elif 'de' in voice:  # hans
-            engine.setVoice(voices[0].id)
-        elif 'it' in voice:  # marco
-            engine.setVoice(voices[0].id)
-        engine.say(text)
-        engine.runAndWait()
-        log.info(f'TTS spoke: {text[:50]}')
+        # ElevenLabs API (free: 10k chars/month)
+        ELEVEN_KEY = 'sk_e9dffd58b24cdc0b79548be79bee3c5733d0e9650b5c71f4'
+        ELEVEN_VOICE = 'Rachel'  # English voice
+        
+        r = requests.post(
+            f'https://api.elevenlabs.io/v1/text-to-speech/{ELEVEN_VOICE}',
+            headers={
+                'xi-api-key': ELEVEN_KEY,
+                'Content-Type': 'application/json',
+            },
+            json={'text': text, 'model_id': 'eleven_monolingual_v1'},
+            timeout=10,
+        )
+        if r.status_code == 200:
+            play_audio(r.content)
+            log.info(f'TTS: {text[:50]}')
+        else:
+            log.warning(f'TTS {r.status_code}: {r.text[:100]}')
     except Exception as e:
-        log.warning(f'TTS offline fallback: {e}')
+        log.error(f'TTS: {e}')
 
 def ask_ai(system, prompt, key):
     try:
