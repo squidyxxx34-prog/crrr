@@ -58,16 +58,24 @@ def play_audio(data):
 # ── GROQ ──
 def tts(text, voice, key):
     try:
-        r = requests.post(f'{GROQ_API}/audio/speech',
-            headers={'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
-            json={'model': 'playai-tts', 'input': text, 'voice': voice, 'response_format': 'wav'},
-            timeout=10)
-        if r.status_code == 200:
-            play_audio(r.content)
-        else:
-            log.warning(f'TTS {r.status_code}: {r.text[:100]}')
+        # Use Google Cloud Text-to-Speech (free tier, no auth needed via public API)
+        # Alternative: Use pyttsx3 (offline, system voices)
+        import pyttsx3
+        engine = pyttsx3.init()
+        engine.setProperty('rate', 150)  # speech rate
+        # Map personas to voices
+        voices = engine.getProperty('voices')
+        if 'en' in voice:  # james, nick (en)
+            engine.setVoice(voices[1].id if len(voices) > 1 else voices[0].id)
+        elif 'de' in voice:  # hans
+            engine.setVoice(voices[0].id)
+        elif 'it' in voice:  # marco
+            engine.setVoice(voices[0].id)
+        engine.say(text)
+        engine.runAndWait()
+        log.info(f'TTS spoke: {text[:50]}')
     except Exception as e:
-        log.error(f'TTS: {e}')
+        log.warning(f'TTS offline fallback: {e}')
 
 def ask_ai(system, prompt, key):
     try:
