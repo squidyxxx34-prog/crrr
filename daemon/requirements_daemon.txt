@@ -1,5 +1,5 @@
 requests==2.31.0
 pynput==1.7.6
 pygame==2.5.2
-pyttsx3==2.90
+gtts==2.4.0
 pyinstaller==6.3.0
