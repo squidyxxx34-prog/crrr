@@ -59,30 +59,24 @@ def play_audio(data):
 # Simplified TTS function using Windows SAPI5
 def tts(text, voice, key):
     try:
-        import subprocess
-        import tempfile
-        import os
-        # Google Translate TTS URL (no auth needed)
-        # Format: https://translate.google.com/translate_tts?ie=UTF-8&q=TEXT&tl=en&client=tw-ob
-        from urllib.parse import quote
-        text_quoted = quote(text[:200])  # Google TTS has limits
-        url = f'https://translate.google.com/translate_tts?ie=UTF-8&q={text_quoted}&tl=en&client=tw-ob'
-        
-        # Download audio
-        with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as f:
-            temp_file = f.name
-        
-        # Use ffplay to play (comes with ffmpeg), or fallback to powershell
-        cmd = f'powershell -Command "Invoke-WebRequest -Uri \"{url}\" -OutFile \"{temp_file}\"; Add-Type -AssemblyName PresentationCore; (New-Object System.Media.SoundPlayer).PlaySync(\"{temp_file}\")"'
-        subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
-        
-        try:
-            os.remove(temp_file)
-        except:
-            pass
-        log.info(f"TTS: {text[:50]}")
+        r = requests.post(
+            'https://api.groq.com/openai/v1/audio/speech',
+            headers={'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
+            json={
+                'model': 'canopylabs/orpheus-v1-english',
+                'voice': 'dan',
+                'input': text,
+                'response_format': 'wav',
+            },
+            timeout=15,
+        )
+        if r.status_code == 200:
+            play_audio(r.content)
+            log.info(f'TTS: {text[:60]}')
+        else:
+            log.warning(f'TTS {r.status_code}: {r.text[:120]}')
     except Exception as e:
-        log.warning(f"TTS: {e}")
+        log.warning(f'TTS: {e}')
 
 def ask_ai(system, prompt, key):
     try:
@@ -259,9 +253,14 @@ class PitWallDaemon:
         self._ptt_pressed = False
 
     def sys_prompt(self):
-        return (f"You are a professional sim racing engineer. {self.persona['style']} "
-                "Max 2 sentences. Speak directly to the driver. "
-                "If nothing important: reply exactly SILENT")
+        return (
+            f"You are a professional sim racing engineer. {self.persona['style']} "
+            "Max 2 sentences. Speak directly to the driver. "
+            "Add ONE vocal direction tag before your message to match the emotion: "
+            "[neutral] for normal updates, [serious] for warnings, [urgent] for critical alerts. "
+            "Example: [neutral] Fuel at 45%, we have plenty of laps left. "
+            "If nothing important to say: reply exactly SILENT"
+        )
 
     def ctx(self):
         d = self.telem
