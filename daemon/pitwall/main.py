@@ -61,19 +61,21 @@ def tts(text, voice, key):
     try:
         import subprocess
         import tempfile
-        # Write text to temp file to avoid quote issues
+        import os
+        # Write text to temp file
         with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
             f.write(text)
             temp_file = f.name
-        # PowerShell reads from file
-        ps_cmd = f"Add-Type -AssemblyName System.Speech; $text = Get-Content '{temp_file}'; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak($text)"
-        subprocess.Popen(
+        # PowerShell: read file, speak, wait for speech to finish
+        ps_cmd = f"Add-Type -AssemblyName System.Speech; $text = Get-Content '{temp_file}'; $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; $synth.Speak($text)"
+        proc = subprocess.Popen(
             ["powershell", "-NoProfile", "-Command", ps_cmd],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             creationflags=0x08000000
         )
-        import os
+        # Wait for PowerShell to finish
+        proc.wait(timeout=30)
         try:
             os.remove(temp_file)
         except:
