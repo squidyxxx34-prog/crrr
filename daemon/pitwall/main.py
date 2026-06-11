@@ -62,20 +62,20 @@ def tts(text, voice, key):
         import subprocess
         import tempfile
         import os
-        # Write text to temp file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
-            f.write(text)
+        # Google Translate TTS URL (no auth needed)
+        # Format: https://translate.google.com/translate_tts?ie=UTF-8&q=TEXT&tl=en&client=tw-ob
+        from urllib.parse import quote
+        text_quoted = quote(text[:200])  # Google TTS has limits
+        url = f'https://translate.google.com/translate_tts?ie=UTF-8&q={text_quoted}&tl=en&client=tw-ob'
+        
+        # Download audio
+        with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as f:
             temp_file = f.name
-        # PowerShell: read file, speak, wait for speech to finish
-        ps_cmd = f"Add-Type -AssemblyName System.Speech; $text = Get-Content '{temp_file}'; $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer; $synth.Speak($text)"
-        proc = subprocess.Popen(
-            ["powershell", "-NoProfile", "-Command", ps_cmd],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            creationflags=0x08000000
-        )
-        # Wait for PowerShell to finish
-        proc.wait(timeout=30)
+        
+        # Use ffplay to play (comes with ffmpeg), or fallback to powershell
+        cmd = f'powershell -Command "Invoke-WebRequest -Uri \"{url}\" -OutFile \"{temp_file}\"; Add-Type -AssemblyName PresentationCore; (New-Object System.Media.SoundPlayer).PlaySync(\"{temp_file}\")"'
+        subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
+        
         try:
             os.remove(temp_file)
         except:
