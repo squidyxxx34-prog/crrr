@@ -59,24 +59,33 @@ def play_audio(data):
 # Simplified TTS function using Windows SAPI5
 def tts(text, voice, key):
     try:
-        r = requests.post(
-            'https://api.groq.com/openai/v1/audio/speech',
-            headers={'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
-            json={
-                'model': 'canopylabs/orpheus-v1-english',
-                'voice': 'dan',
-                'input': text,
-                'response_format': 'wav',
-            },
-            timeout=15,
-        )
-        if r.status_code == 200:
-            play_audio(r.content)
-            log.info(f'TTS: {text[:60]}')
-        else:
-            log.warning(f'TTS {r.status_code}: {r.text[:120]}')
+        import asyncio
+        import edge_tts
+        import tempfile, os
+
+        # Ryan = British male, perfect for F1 engineer
+        VOICE = "en-GB-RyanNeural"
+
+        async def _speak():
+            communicate = edge_tts.Communicate(text, VOICE, rate="+5%")
+            with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
+                tmp = f.name
+            await communicate.save(tmp)
+            return tmp
+
+        tmp = asyncio.run(_speak())
+        pygame.mixer.music.load(tmp)
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy():
+            time.sleep(0.05)
+        pygame.mixer.music.unload()
+        try:
+            os.remove(tmp)
+        except:
+            pass
+        log.info(f"TTS: {text[:60]}")
     except Exception as e:
-        log.warning(f'TTS: {e}')
+        log.warning(f"TTS: {e}")
 
 def ask_ai(system, prompt, key):
     try:
