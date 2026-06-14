@@ -296,36 +296,10 @@ class LMUReader:
         return self.tb is not None
 
     def _read_telem(self):
-        if not self.tb: return {}
-        try:
-            num_v = shm_i(self.tb, self.HDR_NUM_VEHICLES)
-            if num_v <= 0 or num_v > 128: return {}
-            vbase = self.tb + self.HDR_VEHICLES
-            fuel  = shm_f(self.tb, self.HDR_VEHICLES + self.VT_FUEL)
-            lap   = shm_i(self.tb, self.HDR_VEHICLES + self.VT_LAP_NUMBER)
-            rpm   = shm_f(self.tb, self.HDR_VEHICLES + self.VT_ENGINE_RPM)
-            gear  = shm_i(self.tb, self.HDR_VEHICLES + self.VT_GEAR)
-            track = shm_s(self.tb, self.HDR_VEHICLES + self.VT_TRACK_NAME, 64)
-            return {'fuel': fuel, 'lap': lap, 'rpm': rpm, 'gear': gear, 'track': track, 'num_v': num_v}
-        except Exception as e:
-            log.debug(f'LMU telem read: {e}')
-            return {}
+        return {}  # replaced by inline logic in read()
 
     def _read_score(self):
-        if not self.sb: return {}
-        try:
-            num_v = shm_i(self.sb, self.SC_NUM_VEHICLES)
-            if num_v <= 0 or num_v > 128: return {}
-            # Player vehicle is typically first (index 0)
-            sbase = self.SC_VEHICLES
-            place      = ctypes.c_uint8.from_address(self.sb + sbase + self.VS_PLACE).value
-            total_laps = ctypes.c_int16.from_address(self.sb + sbase + self.VS_TOTAL_LAPS).value
-            time_behind= shm_d(self.sb, sbase + self.VS_TIME_BEHIND)
-            return {'place': place, 'total_v': num_v, 'total_laps': total_laps,
-                    'gap': abs(time_behind)}
-        except Exception as e:
-            log.debug(f'LMU score read: {e}')
-            return {}
+        return {}  # replaced by inline logic in read()
 
     def read(self):
         if not self.tb: return None
