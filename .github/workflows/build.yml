@@ -22,7 +22,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests pynput pygame edge-tts pyinstaller pywin32
+        run: pip install requests pynput pygame edge-tts sounddevice numpy pyinstaller pywin32
 
       - name: Build Setup EXE
         run: |
@@ -38,7 +38,7 @@ jobs:
       - name: Build Daemon EXE
         run: |
           cd daemon
-          python -m PyInstaller --onefile --noconsole --name PitWallAI --add-data "pitwall;pitwall" --hidden-import requests --hidden-import pynput --hidden-import pynput.keyboard --hidden-import pygame --hidden-import ctypes --hidden-import edge_tts --hidden-import asyncio pitwall_daemon_entry.py
+          python -m PyInstaller --onefile --noconsole --name PitWallAI --add-data "pitwall;pitwall" --hidden-import requests --hidden-import pynput --hidden-import pynput.keyboard --hidden-import pygame --hidden-import edge_tts --hidden-import asyncio --hidden-import sounddevice --hidden-import numpy --hidden-import ctypes --hidden-import wave pitwall_daemon_entry.py
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
