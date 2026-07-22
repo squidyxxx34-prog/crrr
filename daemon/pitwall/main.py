@@ -571,7 +571,12 @@ class PitWallDaemon:
                 r = cls()
                 if r.connect():
                     d = r.read()
-                    if d: self.reader = r; log.info(f'Sim: {name}'); return True
+                    if d:
+                        self.reader = r
+                        self.telem  = d
+                        self.strategy.update(d)
+                        log.info(f'Sim: {name}')
+                        return True
                     r.disconnect()
             except Exception as e:
                 log.debug(f'{name}: {e}')
