@@ -38,7 +38,7 @@ jobs:
       - name: Build Daemon EXE
         run: |
           cd daemon
-          python -m PyInstaller --onefile --noconsole --name PitWallAI --add-data "pitwall;pitwall" --hidden-import requests --hidden-import pynput --hidden-import pynput.keyboard --hidden-import pygame --hidden-import edge_tts --hidden-import asyncio --hidden-import sounddevice --hidden-import numpy --hidden-import ctypes --hidden-import wave pitwall_daemon_entry.py
+          python -m PyInstaller --onefile --noconsole --name PitWallAI --add-data "pitwall;pitwall" --collect-all sounddevice --hidden-import requests --hidden-import pynput --hidden-import pynput.keyboard --hidden-import pygame --hidden-import edge_tts --hidden-import asyncio --hidden-import sounddevice --hidden-import numpy --hidden-import ctypes --hidden-import wave pitwall_daemon_entry.py
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
