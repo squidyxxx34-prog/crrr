@@ -7,7 +7,7 @@ PitWall AI — Race Engineer Daemon v5 FINAL
 - Real strategy: pit window, fuel laps, gap trend
 """
 
-import sys, os, time, json, re, threading, ctypes, io, logging, wave, tempfile, asyncio, subprocess
+import sys, os, time, json, re, threading, ctypes, io, logging, wave, tempfile, asyncio, subprocess, zipfile, shutil
 from datetime import datetime
 from collections import deque
 from pathlib import Path
@@ -55,8 +55,9 @@ GITHUB_REPO      = 'squidyxxx34-prog/crrr'
 VERSION_FILE     = APP_DIR / 'version.txt'
 
 def check_and_update():
-    """Check GitHub Releases for a newer PitWallAI.exe. If found, download,
-    swap the running exe, and relaunch. Safe no-op if anything fails."""
+    """Check GitHub Releases for a newer PitWallAI build (onedir zip).
+    If found, download, extract, swap the install folder, and relaunch.
+    Safe no-op if anything fails."""
     try:
         r = requests.get(
             f'https://api.github.com/repos/{GITHUB_REPO}/releases/latest',
@@ -68,9 +69,9 @@ def check_and_update():
         rel = r.json()
         latest_tag = rel.get('tag_name', '')
         assets = rel.get('assets', [])
-        exe_asset = next((a for a in assets if a.get('name') == 'PitWallAI.exe'), None)
-        if not exe_asset or not latest_tag:
-            log.info('Update check: no PitWallAI.exe asset in latest release.')
+        zip_asset = next((a for a in assets if a.get('name') == 'PitWallAI-Windows.zip'), None)
+        if not zip_asset or not latest_tag:
+            log.info('Update check: no PitWallAI-Windows.zip asset in latest release.')
             return
 
         local_version = VERSION_FILE.read_text().strip() if VERSION_FILE.exists() else ''
@@ -79,28 +80,36 @@ def check_and_update():
             log.info(f'Up to date: {latest_tag}')
             return
 
-        # Only auto-update if we are running as a frozen exe (not during dev)
         if not getattr(sys, 'frozen', False):
-            log.info(f'Update available ({latest_tag}) but not running as .exe — skipping.')
+            log.info(f'Update available ({latest_tag}) but not running as .exe -- skipping.')
             return
 
         log.info(f'Update available: {local_version or "unknown"} -> {latest_tag}. Downloading...')
-        dl_url = exe_asset['browser_download_url']
-        resp = requests.get(dl_url, timeout=60)
+        dl_url = zip_asset['browser_download_url']
+        resp = requests.get(dl_url, timeout=90)
         if resp.status_code != 200:
             log.warning(f'Update download failed: HTTP {resp.status_code}')
             return
 
-        new_exe_path = APP_DIR / 'PitWallAI_new.exe'
-        new_exe_path.write_bytes(resp.content)
+        zip_path = APP_DIR / 'update.zip'
+        zip_path.write_bytes(resp.content)
+
+        extract_dir = APP_DIR / 'update_staging'
+        if extract_dir.exists():
+            shutil.rmtree(extract_dir, ignore_errors=True)
+        with zipfile.ZipFile(zip_path, 'r') as zf:
+            zf.extractall(extract_dir)
 
         current_exe = Path(sys.executable)
+        current_dir = current_exe.parent  # onedir install folder
+
         bat_path = APP_DIR / 'pitwall_update.bat'
         bat_content = (
             '@echo off\n'
             'timeout /t 2 /nobreak > NUL\n'
-            f'copy /y "{new_exe_path}" "{current_exe}"\n'
-            f'del "{new_exe_path}"\n'
+            f'xcopy /y /e /i "{extract_dir}" "{current_dir}"\n'
+            f'rmdir /s /q "{extract_dir}"\n'
+            f'del "{zip_path}"\n'
             f'start "" "{current_exe}"\n'
             'del "%~f0"\n'
         )
@@ -116,7 +125,6 @@ def check_and_update():
         os._exit(0)
     except Exception as e:
         log.warning(f'Update check failed: {e}')
-
 
 KERNEL32 = ctypes.windll.kernel32
 
