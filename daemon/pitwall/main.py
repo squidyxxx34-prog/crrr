@@ -48,7 +48,26 @@ PERSONAS = {
     'nick':  'Straight-talking Australian GT engineer. Blunt. Always honest.',
 }
 
+import ctypes.wintypes as wintypes
+
 KERNEL32 = ctypes.windll.kernel32
+
+# CRITICAL: declare explicit argtypes/restype for every Win32 call.
+# Without this, ctypes defaults pointer returns to 32-bit int on some
+# builds, silently truncating 64-bit pointers -> invalid memory access
+# -> hard OS-level crash that bypasses Python's try/except entirely.
+KERNEL32.OpenFileMappingW.restype  = wintypes.HANDLE
+KERNEL32.OpenFileMappingW.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.LPCWSTR]
+
+KERNEL32.MapViewOfFile.restype  = wintypes.LPVOID
+KERNEL32.MapViewOfFile.argtypes = [wintypes.HANDLE, wintypes.DWORD, wintypes.DWORD, wintypes.DWORD, ctypes.c_size_t]
+
+KERNEL32.UnmapViewOfFile.restype  = wintypes.BOOL
+KERNEL32.UnmapViewOfFile.argtypes = [wintypes.LPCVOID]
+
+KERNEL32.CloseHandle.restype  = wintypes.BOOL
+KERNEL32.CloseHandle.argtypes = [wintypes.HANDLE]
+
 pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.mixer.init()
 
@@ -115,94 +134,151 @@ def supa_log(data, token):
             json=data, timeout=4)
     except: pass
 
-# ── SHARED MEMORY ─────────────────────────────────────────────────────────────
+# ── SHARED MEMORY (crash-safe: bounded copy + struct parsing) ────────────────
+import struct
+
+class MEMORY_BASIC_INFORMATION(ctypes.Structure):
+    _fields_ = [
+        ("BaseAddress",       ctypes.c_void_p),
+        ("AllocationBase",    ctypes.c_void_p),
+        ("AllocationProtect", ctypes.c_ulong),
+        ("RegionSize",        ctypes.c_size_t),
+        ("State",             ctypes.c_ulong),
+        ("Protect",           ctypes.c_ulong),
+        ("Type",              ctypes.c_ulong),
+    ]
+
+KERNEL32.VirtualQuery.restype  = ctypes.c_size_t
+KERNEL32.VirtualQuery.argtypes = [wintypes.LPCVOID, ctypes.POINTER(MEMORY_BASIC_INFORMATION), ctypes.c_size_t]
+
+def shm_region_size(buf):
+    """Query the real committed size of the mapped view. Returns 0 if unknown."""
+    try:
+        mbi = MEMORY_BASIC_INFORMATION()
+        ok = KERNEL32.VirtualQuery(ctypes.c_void_p(buf), ctypes.byref(mbi), ctypes.sizeof(mbi))
+        if ok:
+            return mbi.RegionSize
+    except Exception:
+        pass
+    return 0
+
 def shm_open(name):
+    """Open a named file mapping and return (handle, ptr, safe_size) or (None, None, 0)."""
     h = KERNEL32.OpenFileMappingW(0x0004, False, name)
-    if not h: return None, None
+    if not h:
+        return None, None, 0
     b = KERNEL32.MapViewOfFile(h, 0x0004, 0, 0, 0)
-    if not b: KERNEL32.CloseHandle(h); return None, None
-    return h, b
+    if not b:
+        KERNEL32.CloseHandle(h)
+        return None, None, 0
+    size = shm_region_size(b)
+    return h, b, size
 
 def shm_close(h, b):
     if b: KERNEL32.UnmapViewOfFile(b)
     if h: KERNEL32.CloseHandle(h)
 
-def rf(buf, off):
-    return ctypes.c_float.from_address(buf + off).value
-def ri(buf, off):
-    return ctypes.c_int.from_address(buf + off).value
-def ru(buf, off):
-    return ctypes.c_uint.from_address(buf + off).value
-def rd(buf, off):
-    return ctypes.c_double.from_address(buf + off).value
-def rs(buf, off, n):
-    return ctypes.string_at(buf + off, n).decode('utf-8', errors='ignore').rstrip('\x00')
+def shm_snapshot(buf, region_size, want_size):
+    """
+    Take a bounded, crash-safe copy of the mapped region into a local Python
+    bytes object. Never reads past the OS-reported region size.
+    Returns b'' if nothing safe can be copied.
+    """
+    if not buf or region_size <= 0:
+        return b''
+    n = min(want_size, region_size)
+    if n <= 0:
+        return b''
+    try:
+        local = ctypes.create_string_buffer(n)
+        ctypes.memmove(local, ctypes.c_void_p(buf), n)
+        return local.raw
+    except Exception as e:
+        log.debug(f'shm_snapshot failed: {e}')
+        return b''
 
-# ── LMU READER ────────────────────────────────────────────────────────────────
+# ── Safe struct-based field readers (operate on LOCAL bytes, never crash) ───
+def bf(data, off):
+    try: return struct.unpack_from('<f', data, off)[0]
+    except struct.error: return 0.0
+def bi(data, off):
+    try: return struct.unpack_from('<i', data, off)[0]
+    except struct.error: return 0
+def bI(data, off):
+    try: return struct.unpack_from('<I', data, off)[0]
+    except struct.error: return 0
+def bd(data, off):
+    try: return struct.unpack_from('<d', data, off)[0]
+    except struct.error: return 0.0
+def bu8(data, off):
+    try: return struct.unpack_from('<B', data, off)[0]
+    except struct.error: return 0
+def bi16(data, off):
+    try: return struct.unpack_from('<h', data, off)[0]
+    except struct.error: return 0
+def bs(data, off, n):
+    try:
+        chunk = data[off:off+n]
+        return chunk.split(b'\x00')[0].decode('utf-8', errors='ignore')
+    except Exception:
+        return ''
+
+# ── LMU READER (crash-safe) ───────────────────────────────────────────────────
 class LMUReader:
     TELEM = ['$rFactor2SMMP_Telemetry$', '$LMU_SMM_Telemetry$', '$rFactor2SMMP_Buffer1$']
     SCORE = ['$rFactor2SMMP_Scoring$',   '$LMU_SMM_Scoring$']
+    SNAP_SIZE = 4096  # bytes copied per read, bounded to region size automatically
 
     def __init__(self):
-        self.th = self.tb = self.sh = self.sb = None
-        self._fpl = None          # fuel per lap
-        self._lap_fuel = None     # fuel at lap start
+        self.th = self.tb = self.tsize = None
+        self.sh = self.sb = self.ssize = None
+        self._fpl = None
+        self._lap_fuel = None
         self._prev_lap = None
 
     def connect(self):
         for n in self.TELEM:
-            h, b = shm_open(n)
-            if b: self.th, self.tb = h, b; log.info(f'LMU telem: {n}'); break
+            h, b, sz = shm_open(n)
+            if b:
+                self.th, self.tb, self.tsize = h, b, sz
+                log.info(f'LMU telem: {n} ({sz} bytes)')
+                break
         for n in self.SCORE:
-            h, b = shm_open(n)
-            if b: self.sh, self.sb = h, b; log.info(f'LMU score: {n}'); break
+            h, b, sz = shm_open(n)
+            if b:
+                self.sh, self.sb, self.ssize = h, b, sz
+                log.info(f'LMU score: {n} ({sz} bytes)')
+                break
         return self.tb is not None
 
     def read(self):
         if not self.tb: return None
         try:
-            # Version check: mVersionUpdateBegin must equal mVersionUpdateEnd
-            ver_begin = ru(self.tb, 0)
-            ver_end   = ru(self.tb, 4)
-            num_v     = ri(self.tb, 12)
+            raw = shm_snapshot(self.tb, self.tsize, self.SNAP_SIZE)
+            if len(raw) < 64:
+                return None  # not enough data to be meaningful
 
-            # Determine vehicle base offset
-            # Some plugin versions: header at 0 (16 bytes), vehicles at 16
-            # Others: no header, vehicles at 0
-            if ver_begin == ver_end and ver_begin > 0 and 0 < num_v <= 128:
-                vbase = 16  # standard header
-            elif 0 < num_v <= 128:
-                vbase = 16
-            else:
-                # No valid header — try reading vehicle data from offset 0
-                vbase = 0
-                num_v = 1
+            num_v = bi(raw, 12)
+            vbase = 16 if (0 < num_v <= 128) else 0
 
-            # ── Vehicle telemetry ──────────────────────────────────────────
-            vb = self.tb + vbase
+            lap  = bi(raw, vbase + 24)
+            fuel = bf(raw, vbase + 432)
+            rpm  = bf(raw, vbase + 356)
+            gear = bi(raw, vbase + 352)
+            track = bs(raw, vbase + 96, 64) if len(raw) >= vbase + 160 else ''
 
-            lap   = ri(vb, 24)
-            fuel  = rf(vb, 432)     # mFuel confirmed offset
-            rpm   = rf(vb, 356)     # mEngineRPM
-            gear  = ri(vb, 352)     # mGear
-
-            # Track name
-            try:    track = rs(self.tb, vbase + 96, 64)
-            except: track = ''
-
-            # Fuel validation + fallback scan
+            # Fuel fallback scan (all on the LOCAL safe buffer)
             if not (0.1 < fuel < 300.0):
                 for off in [212, 228, 244, 260, 276, 340, 432, 448, 464]:
-                    try:
-                        v = rf(vb, off)
-                        if 0.1 < v < 300.0: fuel = v; break
-                    except: pass
+                    v = bf(raw, vbase + off)
+                    if 0.1 < v < 300.0:
+                        fuel = v
+                        break
             if not (0.1 < fuel < 300.0):
                 fuel = 50.0
 
             fuel_pct = min(100.0, max(0.0, (fuel / 120.0) * 100))
 
-            # ── Fuel consumption tracking ──────────────────────────────────
             if lap != self._prev_lap:
                 if self._lap_fuel is not None and self._prev_lap is not None and lap > 0:
                     consumption = self._lap_fuel - fuel
@@ -212,27 +288,23 @@ class LMUReader:
                 self._lap_fuel = fuel
                 self._prev_lap = lap
 
-            # ── Scoring ────────────────────────────────────────────────────
+            # ── Scoring (separate bounded snapshot) ──────────────────────
             place = total_v = total_laps = 0
             gap = 0.0
             if self.sb:
-                try:
-                    snum  = ri(self.sb, 12)
-                    sb_ok = (0 < snum <= 128)
-                    sbase = 16 if sb_ok else 0
-                    snum  = max(1, snum if sb_ok else 1)
-
-                    # rF2VehicleScoring: place @ 108 (uint8), totalLaps @ 72 (int16), timeBehind @ 116 (double)
-                    place      = ctypes.c_uint8.from_address(self.sb + sbase + 108).value
-                    total_laps = ctypes.c_int16.from_address(self.sb + sbase + 72).value
-                    gap        = abs(rd(self.sb, sbase + 116))
-                    total_v    = snum
-                except: pass
+                sraw = shm_snapshot(self.sb, self.ssize, self.SNAP_SIZE)
+                if len(sraw) >= 32:
+                    snum  = bi(sraw, 12)
+                    sbase = 16 if (0 < snum <= 128) else 0
+                    place      = bu8(sraw, sbase + 108)
+                    total_laps = bi16(sraw, sbase + 72)
+                    gap        = abs(bd(sraw, sbase + 116))
+                    total_v    = max(1, snum if 0 < snum <= 128 else 1)
 
             if not (1 <= place <= 200):      place = 1
             if not (1 <= total_v <= 200):    total_v = 20
             if not (0 <= total_laps <= 999): total_laps = 0
-            if gap > 999: gap = 0.0
+            if gap > 999 or gap < 0: gap = 0.0
 
             return {
                 'sim':          'LMU',
@@ -259,37 +331,49 @@ class LMUReader:
         shm_close(self.th, self.tb); shm_close(self.sh, self.sb)
         self.th = self.tb = self.sh = self.sb = None
 
-# ── ACC READER ────────────────────────────────────────────────────────────────
+# ── ACC READER (crash-safe) ───────────────────────────────────────────────────
 class ACCReader:
+    SNAP_SIZE = 4096
+
     def __init__(self):
-        self.ph = self.pb = self.gh = self.gb = None
+        self.ph = self.pb = self.psize = None
+        self.gh = self.gb = self.gsize = None
         self._fpl = None; self._lap_fuel = None; self._prev_lap = None
 
     def connect(self):
-        self.ph, self.pb = shm_open('Local\\acpmf_physics')
-        self.gh, self.gb = shm_open('Local\\acpmf_graphics')
+        self.ph, self.pb, self.psize = shm_open('Local\\acpmf_physics')
+        self.gh, self.gb, self.gsize = shm_open('Local\\acpmf_graphics')
         return self.pb is not None and self.gb is not None
 
     def read(self):
         if not self.pb or not self.gb: return None
         try:
-            status = ri(self.gb, 4)
+            praw = shm_snapshot(self.pb, self.psize, self.SNAP_SIZE)
+            graw = shm_snapshot(self.gb, self.gsize, self.SNAP_SIZE)
+            if len(praw) < 20 or len(graw) < 300:
+                return None
+
+            status = bi(graw, 4)
             if status == 0: return None
-            fuel  = rf(self.pb, 12)
-            tw_fl = rf(self.pb, 656)
-            pos   = ri(self.gb, 60)
-            lap   = ri(self.gb, 64)
-            total = ri(self.gb, 200)
-            gap   = abs(rf(self.gb, 276))
+
+            fuel  = bf(praw, 12)
+            tw_fl = bf(praw, 656) if len(praw) >= 660 else 0.9
+            pos   = bi(graw, 60)
+            lap   = bi(graw, 64)
+            total = bi(graw, 200)
+            gap   = abs(bf(graw, 276))
+
             if pos <= 0 or pos > 200: pos = 1
             fp  = min(100.0, max(0.0, (fuel / 120.0) * 100))
-            twp = max(0.0, min(100.0, tw_fl))
+            twp = max(0.0, min(100.0, tw_fl * 100 if tw_fl <= 1.0 else tw_fl))
             tc  = 'OK' if twp > 70 else ('WARN' if twp > 40 else 'CRIT')
+
             if lap != self._prev_lap:
                 if self._lap_fuel is not None:
                     c = self._lap_fuel - fuel
                     if 0.1 < c < 15: self._fpl = round(c, 2)
                 self._lap_fuel = fuel; self._prev_lap = lap
+
             return {'sim': 'ACC', 'position': pos, 'totalEntries': 20,
                     'fuelLevel': round(fuel, 2), 'fuelPercent': round(fp, 1),
                     'fuelPerLap': self._fpl,
@@ -303,31 +387,44 @@ class ACCReader:
         shm_close(self.ph, self.pb); shm_close(self.gh, self.gb)
         self.ph = self.pb = self.gh = self.gb = None
 
-# ── iRACING READER ────────────────────────────────────────────────────────────
+# ── iRACING READER (crash-safe) ───────────────────────────────────────────────
 class IRacingReader:
-    def __init__(self): self.h = self.b = None
+    SNAP_SIZE = 200000  # iRacing var headers can span a large region
+
+    def __init__(self):
+        self.h = self.b = self.size = None
+
     def connect(self):
-        self.h, self.b = shm_open('$SuperFileMemory$')
+        self.h, self.b, self.size = shm_open('$SuperFileMemory$')
         return self.b is not None
+
     def read(self):
         if not self.b: return None
         try:
-            if ri(self.b, 0) < 1: return None
-            num_vars   = ri(self.b, 8)
-            buf_offset = ri(self.b, 36)
-            if not (0 < num_vars < 5000): return None
+            raw = shm_snapshot(self.b, self.size, self.SNAP_SIZE)
+            if len(raw) < 200:
+                return None
+            if bi(raw, 0) < 1: return None
+
+            num_vars   = bi(raw, 8)
+            buf_offset = bi(raw, 36)
+            if not (0 < num_vars < 2000): return None
+
             vals = {}
             for i in range(num_vars):
-                base  = 144 + i * 144
-                vtype = ri(self.b, base)
-                off   = ri(self.b, base + 8)
-                name  = rs(self.b, base + 16, 32)
-                addr  = self.b + buf_offset + off
+                base = 144 + i * 144
+                if base + 48 > len(raw): break
+                vtype = bi(raw, base)
+                off   = bi(raw, base + 8)
+                name  = bs(raw, base + 16, 32)
+                addr  = buf_offset + off
+                if addr + 8 > len(raw): continue
                 try:
-                    if vtype == 2:   vals[name] = ri(addr, 0)
-                    elif vtype == 4: vals[name] = rf(addr, 0)
-                    elif vtype == 5: vals[name] = rd(addr, 0)
+                    if vtype == 2:   vals[name] = bi(raw, addr)
+                    elif vtype == 4: vals[name] = bf(raw, addr)
+                    elif vtype == 5: vals[name] = bd(raw, addr)
                 except: pass
+
             fp  = vals.get('FuelLevelPct', 0.5)
             fl  = vals.get('FuelLevel', 50.0)
             lfw = vals.get('LFwearM', 0.8)
@@ -343,7 +440,9 @@ class IRacingReader:
                     'track': '', 'weather': 'Rain' if vals.get('WeatherType', 0) == 1 else 'Dry'}
         except Exception as e:
             log.debug(f'iRacing: {e}'); return None
-    def disconnect(self): shm_close(self.h, self.b); self.h = self.b = None
+
+    def disconnect(self):
+        shm_close(self.h, self.b); self.h = self.b = None
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  STRATEGY ENGINE
