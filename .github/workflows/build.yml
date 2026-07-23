@@ -38,10 +38,15 @@ jobs:
           Remove-Item -Path "daemon\*.spec" -Force -ErrorAction SilentlyContinue
           Remove-Item -Path "daemon\build" -Recurse -Force -ErrorAction SilentlyContinue
 
-      - name: Build Daemon EXE
+      - name: Build Daemon EXE (onedir — no self-extraction, AV-safe)
         run: |
           cd daemon
-          python -m PyInstaller --onefile --noconsole --name PitWallAI --add-data "pitwall;pitwall" --collect-all sounddevice --collect-all idna --collect-all encodings --hidden-import requests --hidden-import pynput --hidden-import pynput.keyboard --hidden-import pygame --hidden-import edge_tts --hidden-import asyncio --hidden-import sounddevice --hidden-import numpy --hidden-import ctypes --hidden-import wave --hidden-import unicodedata --hidden-import encodings --hidden-import encodings.idna pitwall_daemon_entry.py
+          python -m PyInstaller --onedir --noconsole --name PitWallAI --add-data "pitwall;pitwall" --collect-all sounddevice --collect-all idna --collect-all encodings --hidden-import requests --hidden-import pynput --hidden-import pynput.keyboard --hidden-import pygame --hidden-import edge_tts --hidden-import asyncio --hidden-import sounddevice --hidden-import numpy --hidden-import ctypes --hidden-import wave --hidden-import unicodedata --hidden-import encodings --hidden-import encodings.idna pitwall_daemon_entry.py
+
+      - name: Zip Daemon folder
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "daemon\dist\PitWallAI\*" -DestinationPath "daemon\dist\PitWallAI-Windows.zip" -Force
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -49,7 +54,7 @@ jobs:
           name: PitWallAI-Windows
           path: |
             daemon/dist/PitWallAI-Setup.exe
-            daemon/dist/PitWallAI.exe
+            daemon/dist/PitWallAI-Windows.zip
           retention-days: 30
 
       - name: Create GitHub Release
@@ -59,7 +64,7 @@ jobs:
         run: |
           TAG="v${{ github.run_number }}"
           gh release create "$TAG" \
-            daemon/dist/PitWallAI.exe \
+            daemon/dist/PitWallAI-Windows.zip \
             daemon/dist/PitWallAI-Setup.exe \
             --title "PitWall AI $TAG" \
             --notes "Automated build from commit ${{ github.sha }}" \
