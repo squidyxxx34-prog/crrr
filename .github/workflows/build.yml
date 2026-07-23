@@ -8,6 +8,9 @@ on:
       - '.github/workflows/build.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -48,3 +51,16 @@ jobs:
             daemon/dist/PitWallAI-Setup.exe
             daemon/dist/PitWallAI.exe
           retention-days: 30
+
+      - name: Create GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ github.run_number }}"
+          gh release create "$TAG" \
+            daemon/dist/PitWallAI.exe \
+            daemon/dist/PitWallAI-Setup.exe \
+            --title "PitWall AI $TAG" \
+            --notes "Automated build from commit ${{ github.sha }}" \
+            --repo squidyxxx34-prog/crrr
