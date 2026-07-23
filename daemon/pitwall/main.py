@@ -7,7 +7,7 @@ PitWall AI — Race Engineer Daemon v5 FINAL
 - Real strategy: pit window, fuel laps, gap trend
 """
 
-import sys, os, time, json, re, threading, ctypes, io, logging, wave, tempfile, asyncio
+import sys, os, time, json, re, threading, ctypes, io, logging, wave, tempfile, asyncio, subprocess
 from datetime import datetime
 from collections import deque
 from pathlib import Path
@@ -49,6 +49,74 @@ PERSONAS = {
 }
 
 import ctypes.wintypes as wintypes
+
+# ── AUTO-UPDATE ────────────────────────────────────────────────────────────
+GITHUB_REPO      = 'squidyxxx34-prog/crrr'
+VERSION_FILE     = APP_DIR / 'version.txt'
+
+def check_and_update():
+    """Check GitHub Releases for a newer PitWallAI.exe. If found, download,
+    swap the running exe, and relaunch. Safe no-op if anything fails."""
+    try:
+        r = requests.get(
+            f'https://api.github.com/repos/{GITHUB_REPO}/releases/latest',
+            timeout=8,
+        )
+        if r.status_code != 200:
+            log.info('Update check: no releases found yet.')
+            return
+        rel = r.json()
+        latest_tag = rel.get('tag_name', '')
+        assets = rel.get('assets', [])
+        exe_asset = next((a for a in assets if a.get('name') == 'PitWallAI.exe'), None)
+        if not exe_asset or not latest_tag:
+            log.info('Update check: no PitWallAI.exe asset in latest release.')
+            return
+
+        local_version = VERSION_FILE.read_text().strip() if VERSION_FILE.exists() else ''
+
+        if local_version == latest_tag:
+            log.info(f'Up to date: {latest_tag}')
+            return
+
+        # Only auto-update if we are running as a frozen exe (not during dev)
+        if not getattr(sys, 'frozen', False):
+            log.info(f'Update available ({latest_tag}) but not running as .exe — skipping.')
+            return
+
+        log.info(f'Update available: {local_version or "unknown"} -> {latest_tag}. Downloading...')
+        dl_url = exe_asset['browser_download_url']
+        resp = requests.get(dl_url, timeout=60)
+        if resp.status_code != 200:
+            log.warning(f'Update download failed: HTTP {resp.status_code}')
+            return
+
+        new_exe_path = APP_DIR / 'PitWallAI_new.exe'
+        new_exe_path.write_bytes(resp.content)
+
+        current_exe = Path(sys.executable)
+        bat_path = APP_DIR / 'pitwall_update.bat'
+        bat_content = (
+            '@echo off\n'
+            'timeout /t 2 /nobreak > NUL\n'
+            f'copy /y "{new_exe_path}" "{current_exe}"\n'
+            f'del "{new_exe_path}"\n'
+            f'start "" "{current_exe}"\n'
+            'del "%~f0"\n'
+        )
+        bat_path.write_text(bat_content)
+        VERSION_FILE.write_text(latest_tag)
+
+        log.info(f'Update staged ({latest_tag}). Restarting...')
+        subprocess.Popen(
+            ['cmd', '/c', str(bat_path)],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            creationflags=0x08000000,
+        )
+        os._exit(0)
+    except Exception as e:
+        log.warning(f'Update check failed: {e}')
+
 
 KERNEL32 = ctypes.windll.kernel32
 
@@ -697,6 +765,7 @@ class PitWallDaemon:
 
     def run(self):
         log.info('PitWall AI v5 starting...')
+        check_and_update()
         self.setup_ptt()
         while self.running:
             if self.detect(): break
