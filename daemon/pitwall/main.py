@@ -277,6 +277,19 @@ class LMUReader:
             if not (0.1 < fuel < 300.0):
                 fuel = 50.0
 
+            # ── TEMP DEBUG: log every plausible fuel-like offset every ~20s ──
+            # Compare these values to your in-game fuel gauge (in litres) and
+            # tell me which offset matches — then we lock it in permanently.
+            now_ts = time.time()
+            if not hasattr(self, '_last_fuel_debug') or now_ts - getattr(self, '_last_fuel_debug', 0) > 20:
+                self._last_fuel_debug = now_ts
+                candidates = {}
+                for off in range(180, 500, 4):
+                    v = bf(raw, vbase + off)
+                    if 0.05 < v < 250.0:
+                        candidates[off] = round(v, 2)
+                log.info(f'FUEL SCAN (compare to HUD): {candidates}')
+
             fuel_pct = min(100.0, max(0.0, (fuel / 120.0) * 100))
 
             if lap != self._prev_lap:
