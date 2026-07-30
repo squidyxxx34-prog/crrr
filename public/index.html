@@ -4,446 +4,473 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>PitWall AI — Your AI Race Engineer</title>
-<meta name="description" content="An AI race engineer that watches your telemetry lap by lap and talks you through the race — fuel windows, tyre calls, real strategy. LMU, ACC, iRacing."/>
+<meta name="description" content="Drag the sliders. Hear your engineer react. An AI race engineer that watches your telemetry and calls the race — fuel windows, tyre calls, real strategy."/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
 <style>
   :root{
-    --black:#0a0a0a; --charcoal:#141414; --panel:#181818; --line:#262626;
-    --white:#f3f2ee; --dim:#7a7a76; --dim2:#4a4a48;
-    --red:#e0202f; --red-dim:#7a1119;
-    --amber:#ffb020;
-    --green:#2fe6a8;
+    --black:#0b0b0a; --panel:#151412; --panel2:#1c1a17; --line:#2c2a26;
+    --paper:#f0ece2; --dim:#8a857a; --dim2:#524e46;
+    --amber:#ffb703; --blue:#3a86ff; --green:#3ddc84; --red:#e5383b;
     --display:'Bebas Neue',sans-serif;
     --body:'DM Sans',sans-serif;
     --mono:'Share Tech Mono',monospace;
   }
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
   html{scroll-behavior:smooth;}
-  @media (prefers-reduced-motion:reduce){
-    html{scroll-behavior:auto;}
-    *{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important;}
-  }
-  body{background:var(--black);color:var(--white);font-family:var(--body);overflow-x:hidden;line-height:1.5;}
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important;}}
+  body{background:var(--black);color:var(--paper);font-family:var(--body);line-height:1.5;}
   a{color:inherit;}
-  ::selection{background:var(--red);color:var(--white);}
+  ::selection{background:var(--amber);color:var(--black);}
 
-  /* ── LOADER / START LIGHTS ─────────────────────────────────────── */
-  #loader{
-    position:fixed;inset:0;z-index:1000;background:var(--black);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;
-    transition:opacity .6s ease, visibility .6s ease;
-  }
-  #loader.hide{opacity:0;visibility:hidden;pointer-events:none;}
-  .lights{display:flex;gap:18px;}
-  .light{
-    width:26px;height:26px;border-radius:50%;
-    background:var(--red-dim);
-    box-shadow:inset 0 0 0 2px #1a1a1a;
-    transition:background .15s ease, box-shadow .15s ease;
-  }
-  .light.on{background:var(--red);box-shadow:0 0 22px 4px rgba(224,32,47,.65), inset 0 0 0 2px #3a0d12;}
-  .loader-caption{
-    font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--dim2);
-    text-transform:uppercase;height:14px;
-  }
+  /* NAV */
+  nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
+    padding:16px 32px;background:rgba(11,11,10,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+  .logo{font-family:var(--display);font-size:22px;letter-spacing:2px;}
+  .logo b{color:var(--amber);font-weight:400;}
+  .nav-r{display:flex;align-items:center;gap:24px;}
+  .nav-r a{font-size:13px;color:var(--dim);text-decoration:none;}
+  .nav-r a:hover{color:var(--paper);}
+  .nav-cta{background:var(--amber);color:var(--black) !important;padding:9px 18px;font-weight:600;border-radius:2px;}
+  .nav-cta:hover{background:#ffc933;}
 
-  /* ── NAV ────────────────────────────────────────────────────────── */
-  nav{
-    position:fixed;top:0;left:0;right:0;z-index:100;
-    display:flex;align-items:center;justify-content:space-between;
-    padding:18px 40px;
-    background:rgba(10,10,10,.88);backdrop-filter:blur(14px);
-    border-bottom:1px solid var(--line);
-  }
-  .nav-logo{font-family:var(--display);font-size:23px;letter-spacing:2.5px;}
-  .nav-logo span{color:var(--red);}
-  .nav-links{display:flex;align-items:center;gap:30px;}
-  .nav-links a{font-size:13px;letter-spacing:.5px;color:var(--dim);text-decoration:none;transition:color .2s;}
-  .nav-links a:hover{color:var(--white);}
-  .nav-cta{background:var(--red) !important;color:var(--white) !important;padding:9px 18px;border-radius:2px;font-weight:500;}
-  .nav-cta:hover{background:#c81a27 !important;}
+  /* HERO / TOP */
+  .top{max-width:1180px;margin:0 auto;padding:64px 32px 20px;}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--blue);text-transform:uppercase;margin-bottom:18px;}
+  h1.title{font-family:var(--display);font-size:clamp(40px,7vw,88px);line-height:.96;max-width:900px;}
+  h1.title em{font-style:normal;color:var(--amber);}
+  .lede{max-width:560px;color:var(--dim);font-size:16px;font-weight:300;margin-top:20px;line-height:1.7;}
 
-  /* ── HERO ───────────────────────────────────────────────────────── */
-  .hero{
-    position:relative;min-height:100vh;display:flex;flex-direction:column;
-    justify-content:center;padding:120px 40px 80px;
-    background:
-      radial-gradient(ellipse 900px 500px at 80% -10%, rgba(224,32,47,.14), transparent 60%),
-      var(--black);
-  }
-  .hero-grid{
-    position:absolute;inset:0;opacity:.35;pointer-events:none;
-    background-image:
-      linear-gradient(to right, var(--line) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--line) 1px, transparent 1px);
-    background-size:64px 64px;
-    mask-image:linear-gradient(to bottom, black, transparent 70%);
-  }
-  .hero-tag{
-    position:relative;font-family:var(--mono);font-size:12px;letter-spacing:2px;
-    color:var(--green);text-transform:uppercase;margin-bottom:22px;
-    display:flex;align-items:center;gap:10px;
-  }
-  .hero-tag::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);
-    box-shadow:0 0 8px var(--green);animation:pulse 1.8s ease-in-out infinite;}
-  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
-  .hero-title{
-    position:relative;font-family:var(--display);font-size:clamp(52px,9vw,124px);
-    line-height:.92;letter-spacing:.5px;max-width:920px;
-  }
-  .hero-title .accent{color:var(--red);}
-  .hero-sub{
-    position:relative;margin-top:26px;max-width:540px;color:var(--dim);
-    font-size:17px;font-weight:300;line-height:1.7;
-  }
-  .hero-actions{position:relative;display:flex;gap:16px;margin-top:40px;flex-wrap:wrap;}
-  .btn-primary{
-    background:var(--red);color:var(--white);padding:15px 30px;font-size:14px;
-    font-weight:500;letter-spacing:.4px;text-decoration:none;border-radius:2px;
-    transition:transform .2s, background .2s;
-  }
-  .btn-primary:hover{background:#c81a27;transform:translateY(-2px);}
-  .btn-ghost{
-    border:1px solid var(--line);color:var(--white);padding:15px 30px;font-size:14px;
-    letter-spacing:.4px;text-decoration:none;border-radius:2px;transition:border-color .2s, background .2s;
-  }
-  .btn-ghost:hover{border-color:var(--dim);background:var(--charcoal);}
+  /* ── LIVE DEMO ──────────────────────────────────────────────────── */
+  .demo{max-width:1180px;margin:44px auto 0;padding:0 32px 90px;}
+  .demo-frame{border:1px solid var(--line);border-radius:6px;background:var(--panel);overflow:hidden;}
+  .demo-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel2);}
+  .demo-bar-l{display:flex;align-items:center;gap:10px;}
+  .rec-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:blink 1.4s ease-in-out infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+  .demo-label{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;}
+  .persona-switch{display:flex;gap:4px;}
+  .p-btn{font-family:var(--mono);font-size:11px;letter-spacing:1px;padding:6px 10px;border:1px solid var(--line);
+    background:transparent;color:var(--dim);cursor:pointer;border-radius:2px;transition:all .15s;}
+  .p-btn.on{background:var(--amber);color:var(--black);border-color:var(--amber);}
+  .p-btn:hover:not(.on){border-color:var(--dim);color:var(--paper);}
 
-  /* ── RADIO TICKER ───────────────────────────────────────────────── */
-  .radio{
-    position:relative;margin-top:56px;max-width:620px;
-    border:1px solid var(--line);background:var(--charcoal);border-radius:3px;
-    padding:16px 20px;
+  .demo-body{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+  .controls{padding:28px 28px 32px;border-right:1px solid var(--line);}
+  .ctrl{margin-bottom:26px;}
+  .ctrl-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .ctrl-name{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;}
+  .ctrl-val{font-family:var(--mono);font-size:19px;color:var(--paper);}
+  .ctrl-val.warn{color:var(--amber);} .ctrl-val.danger{color:var(--red);}
+  input[type=range]{-webkit-appearance:none;width:100%;height:3px;background:var(--line);border-radius:2px;outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+    background:var(--amber);cursor:pointer;box-shadow:0 0 0 4px rgba(255,183,3,.15);}
+  input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--amber);border:none;cursor:pointer;}
+  .lap-row{display:flex;gap:10px;margin-top:6px;}
+  .lap-btn{flex:1;font-family:var(--mono);font-size:12px;padding:8px;border:1px solid var(--line);background:transparent;color:var(--dim);cursor:pointer;border-radius:2px;}
+  .lap-btn:hover{border-color:var(--amber);color:var(--paper);}
+
+  .radio-panel{padding:28px;display:flex;flex-direction:column;}
+  .radio-top{display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+  .radio-title{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;}
+  .msg-line{
+    font-family:var(--display);font-size:26px;line-height:1.2;letter-spacing:.3px;
+    min-height:96px;display:flex;align-items:center;
   }
-  .radio-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
-  .radio-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 1.6s ease-in-out infinite;}
-  .radio-label{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--dim2);text-transform:uppercase;}
-  .radio-line{
-    font-family:var(--mono);font-size:14px;color:var(--white);min-height:20px;
-    white-space:nowrap;overflow:hidden;
+  .msg-status{font-family:var(--mono);font-size:11px;color:var(--green);margin-top:8px;height:16px;}
+  .msg-status.speaking::before{content:'● ';}
+  .listen-btn{
+    margin-top:20px;align-self:flex-start;background:transparent;border:1px solid var(--line);
+    color:var(--paper);font-family:var(--mono);font-size:12px;letter-spacing:1px;
+    padding:10px 18px;border-radius:2px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:border-color .2s;
   }
+  .listen-btn:hover{border-color:var(--amber);}
 
-  /* ── SECTION SCAFFOLD ───────────────────────────────────────────── */
-  .section{max-width:1180px;margin:0 auto;padding:120px 40px;}
-  .section-tag{font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--red);text-transform:uppercase;margin-bottom:16px;}
-  .section-title{font-family:var(--display);font-size:clamp(38px,5.5vw,64px);line-height:.98;letter-spacing:.5px;margin-bottom:56px;}
+  @media (max-width:820px){ .demo-body{grid-template-columns:1fr;} .controls{border-right:none;border-bottom:1px solid var(--line);} }
 
-  .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease, transform .7s ease;}
-  .reveal.in{opacity:1;transform:translateY(0);}
+  /* ── SECTIONS ───────────────────────────────────────────────────── */
+  .section{max-width:1180px;margin:0 auto;padding:90px 32px;border-top:1px solid var(--line);}
+  .sec-kicker{font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--blue);text-transform:uppercase;margin-bottom:16px;}
+  .sec-title{font-family:var(--display);font-size:clamp(32px,5vw,52px);line-height:1;margin-bottom:44px;max-width:700px;}
 
-  /* ── HOW IT WORKS ───────────────────────────────────────────────── */
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:36px;}
-  .step{border-top:1px solid var(--line);padding-top:24px;}
-  .step-num{font-family:var(--mono);font-size:12px;color:var(--dim2);margin-bottom:14px;}
-  .step-title{font-family:var(--display);font-size:22px;letter-spacing:.5px;margin-bottom:10px;}
-  .step-desc{color:var(--dim);font-size:14px;line-height:1.7;font-weight:300;}
+  /* Rulebook table — real content, not decoration */
+  .rulebook{border:1px solid var(--line);border-radius:4px;overflow:hidden;}
+  .rule-row{display:grid;grid-template-columns:140px 1fr 2fr;border-bottom:1px solid var(--line);}
+  .rule-row:last-child{border-bottom:none;}
+  .rule-row.head{background:var(--panel2);}
+  .rule-cell{padding:16px 20px;font-size:13.5px;}
+  .rule-row.head .rule-cell{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;}
+  .rule-cell.metric{font-family:var(--mono);font-weight:500;}
+  .rule-cell.thresh{color:var(--amber);font-family:var(--mono);}
+  .rule-cell.action{color:var(--dim);font-weight:300;}
 
-  /* ── SIMS ───────────────────────────────────────────────────────── */
-  .sims-section{background:var(--charcoal);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
-  .sims-inner{max-width:1180px;margin:0 auto;padding:100px 40px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
-  .sims-list{display:flex;flex-direction:column;gap:1px;background:var(--line);}
-  .sim-row{background:var(--charcoal);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;}
-  .sim-name{font-family:var(--display);font-size:20px;letter-spacing:1px;}
-  .sim-badge{font-family:var(--mono);font-size:11px;letter-spacing:1px;padding:5px 10px;border-radius:2px;}
-  .sim-badge.native{background:rgba(47,230,168,.12);color:var(--green);}
-  .sim-badge.daemon{background:rgba(255,176,32,.12);color:var(--amber);}
+  /* Sims */
+  .sims{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:4px;}
+  .sim{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--line);}
+  .sim:last-child{border-bottom:none;}
+  .sim-name{font-family:var(--display);font-size:22px;letter-spacing:1px;}
+  .sim-status{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--green);}
 
-  /* ── FEATURES ───────────────────────────────────────────────────── */
-  .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);}
-  .feature{background:var(--black);padding:32px;}
-  .feature-mark{font-family:var(--mono);font-size:12px;color:var(--red);margin-bottom:16px;}
-  .feature-title{font-family:var(--display);font-size:19px;letter-spacing:.6px;margin-bottom:10px;}
-  .feature-desc{color:var(--dim);font-size:13.5px;line-height:1.7;font-weight:300;}
+  /* Personas grid — click to preview, real interaction */
+  .personas{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden;}
+  .persona{background:var(--black);padding:26px 20px;cursor:pointer;transition:background .15s;text-align:left;border:none;color:var(--paper);font-family:var(--body);}
+  .persona:hover{background:var(--panel);}
+  .persona-flag{font-size:24px;margin-bottom:14px;}
+  .persona-name{font-family:var(--display);font-size:22px;letter-spacing:1px;margin-bottom:6px;}
+  .persona-desc{color:var(--dim);font-size:12.5px;font-weight:300;line-height:1.6;}
+  .persona-hint{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--dim2);margin-top:12px;text-transform:uppercase;}
 
-  /* ── ENGINEERS ──────────────────────────────────────────────────── */
-  .engineers-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
-  .engineer-card{
-    border:1px solid var(--line);padding:28px 22px;text-align:left;border-radius:3px;
-    transition:border-color .25s, transform .25s;background:var(--charcoal);
-  }
-  .engineer-card:hover{border-color:var(--red);transform:translateY(-4px);}
-  .engineer-flag{font-size:26px;margin-bottom:16px;}
-  .engineer-name{font-family:var(--display);font-size:24px;letter-spacing:1px;margin-bottom:8px;}
-  .engineer-style{color:var(--dim);font-size:13px;line-height:1.6;font-weight:300;}
+  /* Pricing */
+  .pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  .plan{border:1px solid var(--line);border-radius:4px;padding:30px 26px;background:var(--panel);}
+  .plan.hi{border-color:var(--amber);}
+  .plan-name{font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--dim);margin-bottom:16px;}
+  .plan-price{font-family:var(--display);font-size:44px;}
+  .plan-price sup{font-size:20px;}
+  .plan-per{font-family:var(--mono);font-size:11px;color:var(--dim2);margin:6px 0 22px;}
+  .plan ul{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:26px;}
+  .plan li{font-size:13px;color:var(--dim);padding-left:18px;position:relative;}
+  .plan li.on{color:var(--paper);}
+  .plan li::before{content:'—';position:absolute;left:0;}
+  .plan li.on::before{content:'✓';color:var(--green);}
+  .plan-btn{display:block;text-align:center;padding:13px;text-decoration:none;font-size:13.5px;font-weight:600;border-radius:2px;}
+  .plan-btn.hi{background:var(--amber);color:var(--black);}
+  .plan-btn.lo{border:1px solid var(--line);color:var(--paper);}
 
-  /* ── PRICING ────────────────────────────────────────────────────── */
-  .pricing-section{max-width:1180px;margin:0 auto;padding:120px 40px;}
-  .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
-  .plan{border:1px solid var(--line);border-radius:4px;padding:36px 30px;position:relative;background:var(--charcoal);}
-  .plan.featured{border-color:var(--red);background:linear-gradient(180deg, rgba(224,32,47,.07), var(--charcoal) 40%);}
-  .plan-badge{
-    position:absolute;top:-12px;left:30px;background:var(--red);color:var(--white);
-    font-family:var(--mono);font-size:10px;letter-spacing:1.5px;padding:5px 10px;border-radius:2px;
-  }
-  .plan-name{font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--dim);margin-bottom:18px;}
-  .plan-price{font-family:var(--display);font-size:50px;line-height:1;}
-  .plan-price sup{font-size:22px;top:-1.2em;}
-  .plan-period{color:var(--dim2);font-size:12px;margin-top:6px;margin-bottom:24px;}
-  .plan-divider{height:1px;background:var(--line);margin-bottom:24px;}
-  .plan-features{list-style:none;display:flex;flex-direction:column;gap:13px;margin-bottom:32px;}
-  .plan-features li{font-size:13.5px;color:var(--dim2);padding-left:20px;position:relative;}
-  .plan-features li::before{content:'—';position:absolute;left:0;color:var(--dim2);}
-  .plan-features li.active{color:var(--white);}
-  .plan-features li.active::before{content:'✓';color:var(--green);}
-  .plan-btn{display:block;text-align:center;padding:14px;border-radius:2px;text-decoration:none;font-size:14px;font-weight:500;letter-spacing:.3px;transition:background .2s, border-color .2s;}
-  .plan-btn.primary{background:var(--red);color:var(--white);}
-  .plan-btn.primary:hover{background:#c81a27;}
-  .plan-btn.outline{border:1px solid var(--line);color:var(--white);}
-  .plan-btn.outline:hover{border-color:var(--dim);}
+  footer{max-width:1180px;margin:0 auto;padding:36px 32px;display:flex;justify-content:space-between;
+    color:var(--dim2);font-family:var(--mono);font-size:11px;border-top:1px solid var(--line);}
 
-  /* ── FOOTER ─────────────────────────────────────────────────────── */
-  footer{border-top:1px solid var(--line);padding:40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
-  .footer-logo{font-family:var(--display);font-size:18px;letter-spacing:1.5px;}
-  .footer-logo span{color:var(--red);}
-  .footer-copy{color:var(--dim2);font-size:12px;font-family:var(--mono);}
-
-  /* ── SKELETON (auth check on load) ─────────────────────────────── */
-  .skel{background:linear-gradient(90deg, var(--charcoal) 25%, var(--panel) 37%, var(--charcoal) 63%);background-size:400% 100%;animation:skel-shine 1.4s ease infinite;border-radius:3px;}
-  @keyframes skel-shine{0%{background-position:100% 0;}100%{background-position:0 0;}}
-
-  /* ── RESPONSIVE ─────────────────────────────────────────────────── */
-  @media (max-width:860px){
-    .nav-links a:not(.nav-cta){display:none;}
-    .steps,.features-grid,.engineers-grid,.pricing-grid{grid-template-columns:1fr;}
-    .sims-inner{grid-template-columns:1fr;}
-    .section{padding:80px 24px;}
-    .hero{padding:110px 24px 60px;}
+  @media (max-width:820px){
+    .rule-row{grid-template-columns:100px 1fr;}
+    .rule-cell.action{grid-column:1/-1;padding-top:0;}
+    .personas,.pricing{grid-template-columns:1fr;}
+    .nav-r a:not(.nav-cta){display:none;}
   }
 </style>
 </head>
 <body>
 
-<!-- LOADER: F1 start-lights sequence doubles as skeleton loading screen -->
-<div id="loader">
-  <div class="lights">
-    <div class="light" data-i="1"></div>
-    <div class="light" data-i="2"></div>
-    <div class="light" data-i="3"></div>
-    <div class="light" data-i="4"></div>
-    <div class="light" data-i="5"></div>
-  </div>
-  <div class="loader-caption" id="loaderCaption">FORMATION LAP</div>
-</div>
-
 <nav>
-  <div class="nav-logo">PITWALL<span>.</span>AI</div>
-  <div class="nav-links">
-    <a href="#how">How it works</a>
+  <div class="logo">PITWALL<b>.AI</b></div>
+  <div class="nav-r">
+    <a href="#rulebook">How it thinks</a>
     <a href="#pricing">Pricing</a>
     <a href="service.html" class="nav-cta">Launch app</a>
   </div>
 </nav>
 
-<section class="hero">
-  <div class="hero-grid"></div>
-  <div class="hero-tag">Live telemetry · Real strategy</div>
-  <h1 class="hero-title">A RACE ENGINEER<br>THAT NEVER<span class="accent"> BLINKS.</span></h1>
-  <p class="hero-sub">PitWall reads your car lap by lap — fuel, tyres, gap to the car ahead — and calls the race like a real pit wall. Push to talk, and it answers.</p>
-  <div class="hero-actions">
-    <a href="service.html" class="btn-primary">Start free →</a>
-    <a href="#how" class="btn-ghost">See how it works</a>
-  </div>
+<div class="top">
+  <div class="kicker">Drag the sliders below — this is really how it thinks</div>
+  <h1 class="title">DON'T WATCH<br>A DEMO. <em>RUN</em> ONE.</h1>
+  <p class="lede">This is the same logic your engineer runs mid-race. Move the fuel, tyres, and gap — the call changes live, in the voice you pick.</p>
+</div>
 
-  <div class="radio">
-    <div class="radio-head">
-      <div class="radio-dot"></div>
-      <div class="radio-label">Pit Wall — Live</div>
+<div class="demo">
+  <div class="demo-frame">
+    <div class="demo-bar">
+      <div class="demo-bar-l">
+        <div class="rec-dot"></div>
+        <div class="demo-label">Live — Sandbox Session</div>
+      </div>
+      <div class="persona-switch" id="personaSwitch">
+        <button class="p-btn on" data-p="james">JAMES</button>
+        <button class="p-btn" data-p="marco">MARCO</button>
+        <button class="p-btn" data-p="hans">HANS</button>
+        <button class="p-btn" data-p="nick">NICK</button>
+      </div>
     </div>
-    <div class="radio-line" id="radioLine">Box box, fuel window opens lap 22.</div>
-  </div>
-</section>
-
-<section class="section" id="how">
-  <div class="section-tag reveal">// how it works</div>
-  <h2 class="section-title reveal">ON TRACK IN<br>UNDER A MINUTE.</h2>
-  <div class="steps">
-    <div class="step reveal">
-      <div class="step-num">01</div>
-      <div class="step-title">INSTALL ONCE</div>
-      <div class="step-desc">One setup wizard on your sim PC. It links your account and picks your engineer's voice — never touch it again, it keeps itself up to date.</div>
-    </div>
-    <div class="step reveal">
-      <div class="step-num">02</div>
-      <div class="step-title">OPEN THE APP</div>
-      <div class="step-desc">No install on your phone. Open PitWall in your browser and you're connected to the session running on your PC.</div>
-    </div>
-    <div class="step reveal">
-      <div class="step-num">03</div>
-      <div class="step-title">RACE</div>
-      <div class="step-desc">Your engineer watches every lap and speaks when it matters — pit windows, tyre cliffs, closing gaps. Hold to ask anything.</div>
-    </div>
-  </div>
-</section>
-
-<div class="sims-section">
-  <div class="sims-inner">
-    <div class="reveal">
-      <div class="section-tag">// supported sims</div>
-      <h2 class="section-title" style="font-size:clamp(34px,5vw,52px);margin-bottom:26px;">WORKS WITH<br>YOUR SIM.</h2>
-      <p style="color:var(--dim);font-size:14px;line-height:1.8;font-weight:300;">LMU and ACC connect the moment the daemon starts — no configuration. iRacing support is built in as well.</p>
-    </div>
-    <div class="sims-list reveal">
-      <div class="sim-row"><span class="sim-name">LE MANS ULTIMATE</span><span class="sim-badge native">NATIVE</span></div>
-      <div class="sim-row"><span class="sim-name">ACC</span><span class="sim-badge native">NATIVE</span></div>
-      <div class="sim-row"><span class="sim-name">iRACING</span><span class="sim-badge native">NATIVE</span></div>
+    <div class="demo-body">
+      <div class="controls">
+        <div class="ctrl">
+          <div class="ctrl-head"><span class="ctrl-name">Fuel</span><span class="ctrl-val" id="fuelVal">62%</span></div>
+          <input type="range" id="fuelSlider" min="0" max="100" value="62"/>
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-head"><span class="ctrl-name">Tyre wear</span><span class="ctrl-val" id="tyreVal">78%</span></div>
+          <input type="range" id="tyreSlider" min="0" max="100" value="78"/>
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-head"><span class="ctrl-name">Gap ahead</span><span class="ctrl-val" id="gapVal">1.4s</span></div>
+          <input type="range" id="gapSlider" min="0" max="50" value="14"/>
+        </div>
+        <div class="ctrl-name" style="margin-bottom:8px;">Or jump to a scenario</div>
+        <div class="lap-row">
+          <button class="lap-btn" data-scn="clean">Clean air</button>
+          <button class="lap-btn" data-scn="fight">Close fight</button>
+          <button class="lap-btn" data-scn="crisis">Late crisis</button>
+        </div>
+      </div>
+      <div class="radio-panel">
+        <div class="radio-top">
+          <div class="radio-title">Engineer radio</div>
+        </div>
+        <div class="msg-line" id="msgLine">Fuel's fine, tyres holding — settle in and find your rhythm.</div>
+        <div class="msg-status" id="msgStatus">Ready</div>
+        <button class="listen-btn" id="listenBtn">▶ Hear it spoken</button>
+      </div>
     </div>
   </div>
 </div>
 
+<section class="section" id="rulebook">
+  <div class="sec-kicker">// the actual rulebook</div>
+  <h2 class="sec-title">No vibes. Thresholds.</h2>
+  <div class="rulebook">
+    <div class="rule-row head">
+      <div class="rule-cell">Metric</div>
+      <div class="rule-cell">Trigger</div>
+      <div class="rule-cell">Call</div>
+    </div>
+    <div class="rule-row">
+      <div class="rule-cell metric">Fuel</div>
+      <div class="rule-cell thresh">&lt; 3 laps remaining</div>
+      <div class="rule-cell action">Box call, calculated off real fuel-per-lap consumption — not a fixed percentage.</div>
+    </div>
+    <div class="rule-row">
+      <div class="rule-cell metric">Tyres</div>
+      <div class="rule-cell thresh">Wear crosses cliff point</div>
+      <div class="rule-cell action">Warning before the drop-off, not after you've already lost the lap time.</div>
+    </div>
+    <div class="rule-row">
+      <div class="rule-cell metric">Gap ahead</div>
+      <div class="rule-cell thresh">Closing under 1.0s</div>
+      <div class="rule-cell action">Push call. Opens under 1.5s and holding — told to defend instead.</div>
+    </div>
+    <div class="rule-row">
+      <div class="rule-cell metric">Push-to-talk</div>
+      <div class="rule-cell thresh">You ask, anytime</div>
+      <div class="rule-cell action">Answered against the exact same live data — not a script.</div>
+    </div>
+  </div>
+</section>
+
 <section class="section">
-  <div class="section-tag reveal">// what it does</div>
-  <h2 class="section-title reveal">STRATEGY, NOT<br>JUST CHATTER.</h2>
-  <div class="features-grid">
-    <div class="feature reveal"><div class="feature-mark">01</div><div class="feature-title">PIT WINDOW MATH</div><div class="feature-desc">Real fuel-per-lap tracking calculates exactly which lap to box — not a guess, a number.</div></div>
-    <div class="feature reveal"><div class="feature-mark">02</div><div class="feature-title">GAP TREND CALLS</div><div class="feature-desc">Closing, holding, or dropping back — your engineer reads the trend and tells you to push or defend.</div></div>
-    <div class="feature reveal"><div class="feature-mark">03</div><div class="feature-title">TYRE WATCH</div><div class="feature-desc">Wear and condition tracked every lap, with a warning before the cliff — not after.</div></div>
-    <div class="feature reveal"><div class="feature-mark">04</div><div class="feature-title">PUSH TO TALK</div><div class="feature-desc">Hold a key, ask "how's my fuel?" — get a real answer, not a script.</div></div>
-    <div class="feature reveal"><div class="feature-mark">05</div><div class="feature-title">RADIO DISCIPLINE</div><div class="feature-desc">It speaks when it matters and stays silent the rest of the time. No noise, no flood.</div></div>
-    <div class="feature reveal"><div class="feature-mark">06</div><div class="feature-title">ALWAYS CURRENT</div><div class="feature-desc">The engineer updates itself in the background — you always run the latest strategy engine.</div></div>
+  <div class="sec-kicker">// supported sims</div>
+  <h2 class="sec-title">Connects the moment you load in.</h2>
+  <div class="sims">
+    <div class="sim"><span class="sim-name">Le Mans Ultimate</span><span class="sim-status">● CONNECTED NATIVELY</span></div>
+    <div class="sim"><span class="sim-name">ACC</span><span class="sim-status">● CONNECTED NATIVELY</span></div>
+    <div class="sim"><span class="sim-name">iRacing</span><span class="sim-status">● CONNECTED NATIVELY</span></div>
   </div>
 </section>
 
-<section class="section" style="padding-top:0">
-  <div class="section-tag reveal">// engineer personas</div>
-  <h2 class="section-title reveal">CHOOSE YOUR<br>ENGINEER.</h2>
-  <div class="engineers-grid">
-    <div class="engineer-card reveal"><div class="engineer-flag">🇬🇧</div><div class="engineer-name">JAMES</div><div class="engineer-style">Calm. Precise.<br>Classic F1 radio.</div></div>
-    <div class="engineer-card reveal"><div class="engineer-flag">🇮🇹</div><div class="engineer-name">MARCO</div><div class="engineer-style">Passionate. Tactical.<br>Always pushing.</div></div>
-    <div class="engineer-card reveal"><div class="engineer-flag">🇩🇪</div><div class="engineer-name">HANS</div><div class="engineer-style">Technical. Data-first.<br>Zero waste.</div></div>
-    <div class="engineer-card reveal"><div class="engineer-flag">🇦🇺</div><div class="engineer-name">NICK</div><div class="engineer-style">Direct. Blunt.<br>No filler.</div></div>
+<section class="section">
+  <div class="sec-kicker">// engineer personas</div>
+  <h2 class="sec-title">Click one — it'll actually talk.</h2>
+  <div class="personas" id="personaGrid">
+    <button class="persona" data-p="james"><div class="persona-flag">🇬🇧</div><div class="persona-name">JAMES</div><div class="persona-desc">Calm, precise. Classic F1 radio discipline.</div><div class="persona-hint">▶ preview voice</div></button>
+    <button class="persona" data-p="marco"><div class="persona-flag">🇮🇹</div><div class="persona-name">MARCO</div><div class="persona-desc">Passionate, tactical. Always reading the undercut.</div><div class="persona-hint">▶ preview voice</div></button>
+    <button class="persona" data-p="hans"><div class="persona-flag">🇩🇪</div><div class="persona-name">HANS</div><div class="persona-desc">Technical, data-first. Zero wasted words.</div><div class="persona-hint">▶ preview voice</div></button>
+    <button class="persona" data-p="nick"><div class="persona-flag">🇦🇺</div><div class="persona-name">NICK</div><div class="persona-desc">Direct, blunt. Tells you straight, every time.</div><div class="persona-hint">▶ preview voice</div></button>
   </div>
 </section>
 
-<section class="pricing-section" id="pricing">
-  <div class="section-tag reveal">// pricing</div>
-  <h2 class="section-title reveal">SIMPLE.<br>TRANSPARENT.</h2>
-  <div class="pricing-grid">
-    <div class="plan reveal">
+<section class="section" id="pricing">
+  <div class="sec-kicker">// pricing</div>
+  <h2 class="sec-title">Simple. Transparent.</h2>
+  <div class="pricing">
+    <div class="plan">
       <div class="plan-name">FREE</div>
       <div class="plan-price"><sup>€</sup>0</div>
-      <div class="plan-period">forever</div>
-      <div class="plan-divider"></div>
-      <ul class="plan-features">
-        <li class="active">3 sessions / month</li>
-        <li class="active">1 sim supported</li>
-        <li class="active">All 4 engineer personas</li>
+      <div class="plan-per">forever</div>
+      <ul>
+        <li class="on">3 sessions / month</li>
+        <li class="on">All 4 personas</li>
         <li>Unlimited sessions</li>
         <li>All sims</li>
-        <li>Team mode</li>
       </ul>
-      <a href="service.html" class="plan-btn outline">Start free</a>
+      <a href="service.html" class="plan-btn lo">Start free</a>
     </div>
-
-    <div class="plan featured reveal">
-      <div class="plan-badge">MOST POPULAR</div>
+    <div class="plan hi">
       <div class="plan-name">PRO</div>
       <div class="plan-price"><sup>€</sup>11.99</div>
-      <div class="plan-period">per month</div>
-      <div class="plan-divider"></div>
-      <ul class="plan-features">
-        <li class="active">Unlimited sessions</li>
-        <li class="active">All 3 sims</li>
-        <li class="active">All 4 engineer personas</li>
-        <li class="active">Priority AI responses</li>
-        <li class="active">Post-race debrief (soon)</li>
-        <li>Team mode</li>
+      <div class="plan-per">per month</div>
+      <ul>
+        <li class="on">Unlimited sessions</li>
+        <li class="on">All 3 sims</li>
+        <li class="on">All 4 personas</li>
+        <li class="on">Priority AI response time</li>
       </ul>
-      <a href="service.html?plan=pro" class="plan-btn primary">Get Pro →</a>
+      <a href="service.html?plan=pro" class="plan-btn hi">Get Pro →</a>
     </div>
-
-    <div class="plan reveal">
+    <div class="plan">
       <div class="plan-name">TEAM</div>
       <div class="plan-price"><sup>€</sup>34.99</div>
-      <div class="plan-period">per month</div>
-      <div class="plan-divider"></div>
-      <ul class="plan-features">
-        <li class="active">Everything in Pro</li>
-        <li class="active">Up to 5 drivers</li>
-        <li class="active">Team strategy dashboard</li>
-        <li class="active">Multi-driver coordination</li>
-        <li class="active">Endurance relay mode</li>
-        <li class="active">Priority support</li>
+      <div class="plan-per">per month</div>
+      <ul>
+        <li class="on">Everything in Pro</li>
+        <li class="on">Up to 5 drivers</li>
+        <li class="on">Endurance relay mode</li>
+        <li class="on">Priority support</li>
       </ul>
-      <a href="service.html?plan=team" class="plan-btn outline">Get Team</a>
+      <a href="service.html?plan=team" class="plan-btn lo">Get Team</a>
     </div>
   </div>
 </section>
 
 <footer>
-  <div class="footer-logo">PITWALL<span>.</span>AI</div>
-  <div class="footer-copy">© 2026 — Built for sim racers</div>
+  <div>PITWALL.AI</div>
+  <div>© 2026</div>
 </footer>
 
 <script>
-  /* ── START LIGHTS LOADER ────────────────────────────────────────── */
-  (function(){
-    var lights = document.querySelectorAll('.light');
-    var caption = document.getElementById('loaderCaption');
-    var loader = document.getElementById('loader');
-    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+(function(){
+  const PERSONAS = {
+    james:{ name:'JAMES', lang:'en-GB', tone:'calm' },
+    marco:{ name:'MARCO', lang:'it-IT', tone:'urgent' },
+    hans:{ name:'HANS',  lang:'de-DE', tone:'flat' },
+    nick:{ name:'NICK',  lang:'en-AU', tone:'blunt' },
+  };
 
-    function finish(){
-      caption.textContent = 'LIGHTS OUT';
-      setTimeout(function(){ loader.classList.add('hide'); }, reduced ? 0 : 260);
+  let currentPersona = 'james';
+
+  const fuelSlider = document.getElementById('fuelSlider');
+  const tyreSlider = document.getElementById('tyreSlider');
+  const gapSlider  = document.getElementById('gapSlider');
+  const fuelVal = document.getElementById('fuelVal');
+  const tyreVal = document.getElementById('tyreVal');
+  const gapVal  = document.getElementById('gapVal');
+  const msgLine = document.getElementById('msgLine');
+  const msgStatus = document.getElementById('msgStatus');
+  const listenBtn = document.getElementById('listenBtn');
+
+  // ── message generator: mirrors the real daemon's threshold logic ──
+  function buildMessage(fuel, tyre, gap, persona){
+    const p = persona;
+    let msg;
+
+    if (fuel < 15){
+      msg = {
+        james:"Fuel's critical, box this lap, we can't stretch it further.",
+        marco:"Fuel critico, box box, non possiamo rischiare!",
+        hans:"Fuel level critical. Pit this lap. No further discussion.",
+        nick:"You're out of fuel, mate. Box now, no arguments.",
+      }[p];
+    } else if (tyre < 35){
+      msg = {
+        james:"Tyres are gone, box box, we've hit the cliff.",
+        marco:"Gomme finite, dobbiamo fermarci ora!",
+        hans:"Tyre wear beyond threshold. Recommend immediate pit stop.",
+        nick:"Tyres are toast. Get in now before you lose more time.",
+      }[p];
+    } else if (gap < 10 && gap > 0){
+      msg = {
+        james:"Gap's closing fast, push now, defend the inside line.",
+        marco:"Si avvicina veloce, spingi ora, difendi dentro!",
+        hans:"Gap closing under one second. Increase pace immediately.",
+        nick:"They're right on you, mate. Push or you're losing this.",
+      }[p];
+    } else if (fuel < 35){
+      msg = {
+        james:"Fuel's getting tight, start saving, pit window is close.",
+        marco:"Carburante basso, gestisci, la finestra si avvicina.",
+        hans:"Fuel level moderate. Begin conservation. Window approaching.",
+        nick:"Fuel's dropping, ease off a touch, window's coming up.",
+      }[p];
+    } else if (tyre < 60){
+      msg = {
+        james:"Tyres are wearing, manage the rears, we're still in the window.",
+        marco:"Gomme in calo, gestisci, siamo ancora nella finestra.",
+        hans:"Tyre wear moderate. Manage pace. Still within window.",
+        nick:"Tyres are going off a bit, look after them for now.",
+      }[p];
+    } else {
+      msg = {
+        james:"Fuel's fine, tyres holding — settle in and find your rhythm.",
+        marco:"Tutto ok, benzina e gomme a posto, trova il ritmo.",
+        hans:"All parameters nominal. Maintain current pace.",
+        nick:"You're sweet, mate. Fuel and tyres are fine, just drive.",
+      }[p];
     }
+    return msg;
+  }
 
-    if(reduced){ finish(); return; }
-
-    var i = 0;
-    var step = setInterval(function(){
-      if(i < lights.length){
-        lights[i].classList.add('on');
-        i++;
-      } else {
-        clearInterval(step);
-        setTimeout(function(){
-          lights.forEach(function(l){ l.classList.remove('on'); });
-          finish();
-        }, 500);
-      }
-    }, 260);
-  })();
-
-  /* ── SCROLL REVEAL ──────────────────────────────────────────────── */
-  (function(){
-    var els = document.querySelectorAll('.reveal');
-    if(!('IntersectionObserver' in window)){
-      els.forEach(function(e){ e.classList.add('in'); });
-      return;
+  function valClass(val, warnAt, dangerAt, inverse){
+    if (inverse){
+      if (val <= dangerAt) return 'danger';
+      if (val <= warnAt) return 'warn';
+      return '';
     }
-    var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry, idx){
-        if(entry.isIntersecting){
-          setTimeout(function(){ entry.target.classList.add('in'); }, idx * 60);
-          io.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
-    els.forEach(function(e){ io.observe(e); });
-  })();
+    if (val >= dangerAt) return 'danger';
+    if (val >= warnAt) return 'warn';
+    return '';
+  }
 
-  /* ── RADIO TICKER ───────────────────────────────────────────────── */
-  (function(){
-    var lines = [
-      'Box box, fuel window opens lap 22.',
-      'Gap ahead closing — 0.6s, push now.',
-      'Tyres OK, 84% — manage to the flag.',
-      'Undercut is live, box this lap if you want it.',
-      'P4, gap behind stable — hold the pace.'
-    ];
-    var el = document.getElementById('radioLine');
-    var idx = 0;
-    setInterval(function(){
-      idx = (idx + 1) % lines.length;
-      el.style.opacity = 0;
-      setTimeout(function(){
-        el.textContent = lines[idx];
-        el.style.transition = 'opacity .4s ease';
-        el.style.opacity = 1;
-      }, 300);
-    }, 3400);
-  })();
+  function update(){
+    const fuel = parseInt(fuelSlider.value, 10);
+    const tyre = parseInt(tyreSlider.value, 10);
+    const gapRaw = parseInt(gapSlider.value, 10);
+    const gap = gapRaw / 10;
+
+    fuelVal.textContent = fuel + '%';
+    fuelVal.className = 'ctrl-val ' + valClass(fuel, 35, 15, true);
+
+    tyreVal.textContent = tyre + '%';
+    tyreVal.className = 'ctrl-val ' + valClass(tyre, 60, 35, true);
+
+    gapVal.textContent = gap.toFixed(1) + 's';
+    gapVal.className = 'ctrl-val ' + valClass(gapRaw, 15, 8, true);
+
+    const msg = buildMessage(fuel, tyre, gapRaw, currentPersona);
+    msgLine.textContent = msg;
+  }
+
+  [fuelSlider, tyreSlider, gapSlider].forEach(s => s.addEventListener('input', update));
+
+  // ── persona switching (both the demo bar and the persona grid drive this) ──
+  function setPersona(p){
+    currentPersona = p;
+    document.querySelectorAll('#personaSwitch .p-btn').forEach(b=>{
+      b.classList.toggle('on', b.dataset.p === p);
+    });
+    update();
+  }
+  document.querySelectorAll('#personaSwitch .p-btn').forEach(b=>{
+    b.addEventListener('click', ()=> setPersona(b.dataset.p));
+  });
+
+  // ── scenario shortcuts ──
+  const scenarios = {
+    clean:  { fuel:72, tyre:82, gap:35 },
+    fight:  { fuel:48, tyre:58, gap:6  },
+    crisis: { fuel:10, tyre:28, gap:20 },
+  };
+  document.querySelectorAll('.lap-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const s = scenarios[btn.dataset.scn];
+      fuelSlider.value = s.fuel; tyreSlider.value = s.tyre; gapSlider.value = s.gap;
+      update();
+    });
+  });
+
+  // ── speak the current line ──
+  function speakCurrent(){
+    if (!window.speechSynthesis){ msgStatus.textContent = 'Speech not supported on this browser.'; return; }
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(msgLine.textContent);
+    const voices = window.speechSynthesis.getVoices();
+    const lang = PERSONAS[currentPersona].lang;
+    const match = voices.find(v => v.lang === lang) || voices.find(v => v.lang.startsWith(lang.split('-')[0]));
+    if (match) u.voice = match;
+    msgStatus.textContent = 'Speaking...';
+    msgStatus.classList.add('speaking');
+    u.onend = () => { msgStatus.textContent = 'Ready'; msgStatus.classList.remove('speaking'); };
+    window.speechSynthesis.speak(u);
+  }
+  listenBtn.addEventListener('click', speakCurrent);
+  window.speechSynthesis && window.speechSynthesis.getVoices();
+  window.speechSynthesis && window.speechSynthesis.addEventListener('voiceschanged', ()=>window.speechSynthesis.getVoices());
+
+  // ── persona grid preview cards: switch + speak a sample line immediately ──
+  document.querySelectorAll('#personaGrid .persona').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      setPersona(card.dataset.p);
+      setTimeout(speakCurrent, 80);
+    });
+  });
+
+  update();
+})();
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
