@@ -210,6 +210,45 @@ def supa_log(data, token):
             json=data, timeout=4)
     except: pass
 
+def save_race_strategy(telem, groq_key, user_id, token):
+    """At session end, ask the AI for a short debrief and save it to
+    race_strategies so it shows up in the account dashboard."""
+    if not user_id or not token or not telem:
+        return
+    try:
+        summary = ask_ai(
+            "You are a race engineer writing a short post-race debrief for the driver's "
+            "logbook. 2-3 sentences max. Mention final position, how fuel strategy went, "
+            "and one takeaway for next time. Plain text, no headers.",
+            f"Final telemetry: position P{telem.get('position')}/{telem.get('totalEntries')}, "
+            f"lap {telem.get('lap')}/{telem.get('totalLaps')}, "
+            f"fuel {telem.get('fuelLevel')}L ({telem.get('fuelPercent')}%), "
+            f"fuel/lap {telem.get('fuelPerLap')}, tyres {telem.get('tyreCondition')}. "
+            "Write the debrief.",
+            groq_key, smart=True,
+        )
+        if not summary or summary.upper() == 'SILENT':
+            summary = 'Session ended.'
+
+        payload = {
+            'user_id':          user_id,
+            'sim':               telem.get('sim', ''),
+            'track':             telem.get('track', '') or None,
+            'final_position':    telem.get('position'),
+            'total_laps':        telem.get('lap'),
+            'fuel_summary':      f"{telem.get('fuelPerLap')}L/lap" if telem.get('fuelPerLap') else None,
+            'strategy_summary':  summary,
+        }
+        requests.post(
+            f'{SUPA_URL}/rest/v1/race_strategies',
+            headers={'apikey': SUPA_KEY, 'Authorization': f'Bearer {token}',
+                     'Content-Type': 'application/json', 'Prefer': 'return=minimal'},
+            json=payload, timeout=6,
+        )
+        log.info('Race strategy summary saved.')
+    except Exception as e:
+        log.warning(f'save_race_strategy: {e}')
+
 # ── SHARED MEMORY (crash-safe: bounded copy + struct parsing) ────────────────
 import struct
 
@@ -630,6 +669,7 @@ class PitWallDaemon:
         self._ptt_pressed   = False
         self._ptt_frames    = []
         self._ptt_recording = False
+        self.session_start  = None
 
     def sys_prompt(self):
         return (
@@ -779,6 +819,7 @@ class PitWallDaemon:
             if self.detect(): break
             time.sleep(5)
 
+        self.session_start = time.time()
         self.speak(f"PitWall online. {self.telem.get('sim','Sim')} connected. Ready to engineer.")
 
         tick = 0
@@ -790,10 +831,14 @@ class PitWallDaemon:
                     self.strategy.update(d)
                 else:
                     log.warning('Sim lost. Searching...')
+                    # Save a debrief if the session was meaningful (>60s)
+                    if self.session_start and time.time() - self.session_start > 60:
+                        save_race_strategy(self.telem, self.groq_key, self.user_id, self.token)
                     self.reader.disconnect(); self.reader = None
                     while self.running:
                         if self.detect(): break
                         time.sleep(5)
+                    self.session_start = time.time()
 
                 self.think()
                 tick += 1
@@ -803,6 +848,10 @@ class PitWallDaemon:
                 break
             except Exception as e:
                 log.error(f'Loop: {e}'); time.sleep(2)
+
+        # Save a final debrief on clean shutdown too, if session was meaningful
+        if self.session_start and time.time() - self.session_start > 60:
+            save_race_strategy(self.telem, self.groq_key, self.user_id, self.token)
 
         if self.reader: self.reader.disconnect()
         pygame.mixer.quit()
