@@ -200,6 +200,14 @@
     .acc-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line-soft)}
 
     /* GAMIFICATION */
+    .status-chip{display:flex;align-items:center;gap:10px;padding:12px 18px;border:1px solid var(--line);
+      border-radius:var(--r-pill);margin-bottom:24px;cursor:pointer;transition:border-color .15s;width:fit-content;max-width:100%}
+    .status-chip:hover{border-color:var(--gold-soft)}
+    .status-chip-rank{font-family:var(--display);font-weight:600;font-size:13px;color:var(--gold)}
+    .status-chip-sep{color:var(--dim2)}
+    .status-chip span:nth-child(3){font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+    .status-chip-arrow{font-family:var(--mono);font-size:10.5px;color:var(--dim2);margin-left:6px;white-space:nowrap}
+
     .rank-row{display:flex;align-items:center;gap:18px;margin-bottom:18px}
     .rank-badge{width:52px;height:52px;border-radius:50%;flex-shrink:0;
       background:radial-gradient(circle at 35% 28%, #3d3730, #121212 72%);border:1px solid var(--gold-soft);
@@ -318,6 +326,7 @@
       </div>
       <nav class="sidebar-nav">
         <button class="nav-item active" data-page="overview" onclick="gotoPage('overview')"><span class="nav-icon">◆</span><span class="nav-label">Overview</span></button>
+        <button class="nav-item" data-page="progress" onclick="gotoPage('progress')"><span class="nav-icon">★</span><span class="nav-label">Progress</span></button>
         <button class="nav-item" data-page="download" onclick="gotoPage('download')"><span class="nav-icon">↓</span><span class="nav-label">Download</span></button>
         <button class="nav-item" data-page="history" onclick="gotoPage('history')"><span class="nav-icon">◷</span><span class="nav-label">Race History</span></button>
         <button class="nav-item" data-page="radio" onclick="gotoPage('radio')"><span class="nav-icon">▤</span><span class="nav-label">Radio Log</span></button>
@@ -347,25 +356,11 @@
           <div class="page-title">Welcome back.</div>
           <div class="page-sub" id="sleft">—</div>
 
-          <div class="dash-card">
-            <div class="dash-card-kicker">your rank</div>
-            <div class="rank-row">
-              <div class="rank-badge" id="rankBadge">—</div>
-              <div style="flex:1">
-                <div class="rank-name" id="rankName">Rookie</div>
-                <div class="rank-next" id="rankNext">—</div>
-              </div>
-            </div>
-            <div class="rank-bar-track"><div class="rank-bar-fill" id="rankBar" style="width:0%"></div></div>
-            <div class="streak-row">
-              <span class="streak-flame">🔥</span>
-              <span class="streak-text" id="streakText">No streak yet</span>
-            </div>
-          </div>
-
-          <div class="dash-card">
-            <div class="dash-card-kicker">badges</div>
-            <div class="badges-grid" id="badgesGrid"></div>
+          <div class="status-chip" onclick="gotoPage('progress')">
+            <span class="status-chip-rank" id="chipRank">—</span>
+            <span class="status-chip-sep">·</span>
+            <span id="chipStreak">No streak yet</span>
+            <span class="status-chip-arrow">View progress →</span>
           </div>
 
           <div class="dash-card carbon">
@@ -390,6 +385,33 @@
             <div class="dash-card-kicker">latest</div>
             <div class="dash-card-title" style="margin-bottom:6px">Most recent strategy</div>
             <div id="overviewLatest"><div class="empty-state">Loading...</div></div>
+          </div>
+        </section>
+
+        <!-- PROGRESS -->
+        <section class="page" id="page-progress">
+          <div class="page-title">Progress</div>
+          <div class="page-sub">Your rank, streak, and badges.</div>
+
+          <div class="dash-card">
+            <div class="dash-card-kicker">your rank</div>
+            <div class="rank-row">
+              <div class="rank-badge" id="rankBadge">—</div>
+              <div style="flex:1">
+                <div class="rank-name" id="rankName">Rookie</div>
+                <div class="rank-next" id="rankNext">—</div>
+              </div>
+            </div>
+            <div class="rank-bar-track"><div class="rank-bar-fill" id="rankBar" style="width:0%"></div></div>
+            <div class="streak-row">
+              <span class="streak-flame">🔥</span>
+              <span class="streak-text" id="streakText">No streak yet</span>
+            </div>
+          </div>
+
+          <div class="dash-card">
+            <div class="dash-card-kicker">badges</div>
+            <div class="badges-grid" id="badgesGrid"></div>
           </div>
         </section>
 
@@ -789,6 +811,7 @@ function renderRank() {
   }
   document.getElementById('rankBadge').textContent = current.icon;
   document.getElementById('rankName').textContent = current.name;
+  document.getElementById('chipRank').textContent = current.icon + ' ' + current.name;
 
   if (next) {
     const span = next.min - current.min;
@@ -802,10 +825,13 @@ function renderRank() {
 
   const streak = ST.streak || 0;
   const streakEl = document.getElementById('streakText');
+  const chipStreakEl = document.getElementById('chipStreak');
   if (streak >= 2) {
     streakEl.innerHTML = '<b>' + streak + '-day streak</b> — best: ' + (ST.bestStreak || streak) + ' days';
+    chipStreakEl.textContent = '🔥 ' + streak + '-day streak';
   } else {
     streakEl.textContent = 'Race today to start a streak';
+    chipStreakEl.textContent = 'No streak yet';
   }
 }
 
