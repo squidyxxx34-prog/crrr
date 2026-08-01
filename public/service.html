@@ -160,6 +160,14 @@
 
     .dash-card{border:1px solid var(--line);border-radius:var(--r-lg);padding:26px 26px;margin-bottom:18px}
     .dash-card-kicker{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:14px}
+    .dash-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .dash-card-head .dash-card-kicker{margin-bottom:0}
+    .badges-count{font-family:var(--mono);font-size:11px;color:var(--dim2)}
+    .badge-group{margin-bottom:22px}
+    .badge-group:last-child{margin-bottom:0}
+    .badge-group-label{font-family:var(--display);font-weight:600;font-size:12.5px;letter-spacing:.3px;color:var(--paper);
+      margin-bottom:10px;display:flex;align-items:center;gap:8px}
+    .badge-group-tally{font-family:var(--mono);font-size:10px;color:var(--dim2);font-weight:400}
     .dash-card-title{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.2px;margin-bottom:14px}
 
     .dl-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -410,8 +418,11 @@
           </div>
 
           <div class="dash-card">
-            <div class="dash-card-kicker">badges</div>
-            <div class="badges-grid" id="badgesGrid"></div>
+            <div class="dash-card-head">
+              <div class="dash-card-kicker">badges</div>
+              <div class="badges-count" id="badgesCount">0 / 30 unlocked</div>
+            </div>
+            <div id="badgesGroups"></div>
           </div>
         </section>
 
@@ -794,43 +805,53 @@ const RANKS = [
 ];
 const BADGE_CATALOG = [
   // Milestones
-  { key: 'first_race',        icon: '🏁', name: 'First Blood',      desc: 'Complete your first race' },
-  { key: 'five_races',        icon: '⚙️', name: 'Getting Serious',  desc: '5 races completed' },
-  { key: 'fifteen_races',     icon: '🏆', name: 'Veteran',          desc: '15 races completed' },
-  { key: 'forty_races',       icon: '👑', name: 'Legend',           desc: '40 races completed' },
-  { key: 'seventyfive_races', icon: '💎', name: 'Diamond',          desc: '75 races completed' },
-  { key: 'century',           icon: '🌟', name: 'Century Club',     desc: '100 races completed' },
+  { key: 'first_race',        icon: '🏁', name: 'First Blood',      desc: 'Complete your first race', cat: 'milestones' },
+  { key: 'five_races',        icon: '⚙️', name: 'Getting Serious',  desc: '5 races completed', cat: 'milestones' },
+  { key: 'fifteen_races',     icon: '🏆', name: 'Veteran',          desc: '15 races completed', cat: 'milestones' },
+  { key: 'forty_races',       icon: '👑', name: 'Legend',           desc: '40 races completed', cat: 'milestones' },
+  { key: 'seventyfive_races', icon: '💎', name: 'Diamond',          desc: '75 races completed', cat: 'milestones' },
+  { key: 'century',           icon: '🌟', name: 'Century Club',     desc: '100 races completed', cat: 'milestones' },
   // Streaks
-  { key: 'streak_3',          icon: '⚡', name: 'Warming Up',       desc: '3-day streak' },
-  { key: 'streak_7',          icon: '🔥', name: 'On Fire',          desc: '7-day streak' },
-  { key: 'streak_14',         icon: '🌋', name: 'Unstoppable',      desc: '14-day streak' },
-  { key: 'streak_30',         icon: '☄️', name: 'Obsessed',         desc: '30-day streak' },
+  { key: 'streak_3',          icon: '⚡', name: 'Warming Up',       desc: '3-day streak', cat: 'streaks' },
+  { key: 'streak_7',          icon: '🔥', name: 'On Fire',          desc: '7-day streak', cat: 'streaks' },
+  { key: 'streak_14',         icon: '🌋', name: 'Unstoppable',      desc: '14-day streak', cat: 'streaks' },
+  { key: 'streak_30',         icon: '☄️', name: 'Obsessed',         desc: '30-day streak', cat: 'streaks' },
   // Performance
-  { key: 'podium',            icon: '🥇', name: 'Podium',           desc: 'Finish P3 or better' },
-  { key: 'race_winner',       icon: '🏅', name: 'Race Winner',      desc: 'Finish P1' },
-  { key: 'top_ten',           icon: '🎯', name: 'Points Finish',    desc: 'Finish in the top 10' },
-  { key: 'three_podiums',     icon: '🥈', name: 'Consistent',       desc: '3 podium finishes' },
-  { key: 'ten_podiums',       icon: '🏆', name: 'Podium Regular',   desc: '10 podium finishes' },
+  { key: 'podium',            icon: '🥇', name: 'Podium',           desc: 'Finish P3 or better', cat: 'performance' },
+  { key: 'race_winner',       icon: '🏅', name: 'Race Winner',      desc: 'Finish P1', cat: 'performance' },
+  { key: 'top_ten',           icon: '🎯', name: 'Points Finish',    desc: 'Finish in the top 10', cat: 'performance' },
+  { key: 'three_podiums',     icon: '🥈', name: 'Consistent',       desc: '3 podium finishes', cat: 'performance' },
+  { key: 'ten_podiums',       icon: '🏆', name: 'Podium Regular',   desc: '10 podium finishes', cat: 'performance' },
   // Sim variety
-  { key: 'lmu_driver',        icon: '🟦', name: 'Le Mans Rookie',   desc: 'First LMU race' },
-  { key: 'acc_driver',        icon: '🟩', name: 'GT Driver',        desc: 'First ACC race' },
-  { key: 'iracing_driver',    icon: '🟨', name: 'Sim Racer',        desc: 'First iRacing race' },
-  { key: 'triple_threat',     icon: '🔺', name: 'Triple Threat',    desc: 'Raced LMU, ACC and iRacing' },
+  { key: 'lmu_driver',        icon: '🟦', name: 'Le Mans Rookie',   desc: 'First LMU race', cat: 'sims' },
+  { key: 'acc_driver',        icon: '🟩', name: 'GT Driver',        desc: 'First ACC race', cat: 'sims' },
+  { key: 'iracing_driver',    icon: '🟨', name: 'Sim Racer',        desc: 'First iRacing race', cat: 'sims' },
+  { key: 'triple_threat',     icon: '🔺', name: 'Triple Threat',    desc: 'Raced LMU, ACC and iRacing', cat: 'sims' },
   // Track variety
-  { key: 'five_tracks',       icon: '🗺️', name: 'Explorer',         desc: 'Raced 5 different tracks' },
-  { key: 'ten_tracks',        icon: '🌍', name: 'Globetrotter',     desc: 'Raced 10 different tracks' },
-  { key: 'track_specialist',  icon: '📍', name: 'Track Specialist', desc: '5 races on the same track' },
+  { key: 'five_tracks',       icon: '🗺️', name: 'Explorer',         desc: 'Raced 5 different tracks', cat: 'tracks' },
+  { key: 'ten_tracks',        icon: '🌍', name: 'Globetrotter',     desc: 'Raced 10 different tracks', cat: 'tracks' },
+  { key: 'track_specialist',  icon: '📍', name: 'Track Specialist', desc: '5 races on the same track', cat: 'tracks' },
   // Endurance
-  { key: 'marathon',          icon: '🕐', name: 'Marathon',         desc: '20+ laps in one session' },
-  { key: 'iron_legs',         icon: '🦵', name: 'Iron Legs',        desc: '50+ laps in one session' },
+  { key: 'marathon',          icon: '🕐', name: 'Marathon',         desc: '20+ laps in one session', cat: 'endurance' },
+  { key: 'iron_legs',         icon: '🦵', name: 'Iron Legs',        desc: '50+ laps in one session', cat: 'endurance' },
   // Time-based
-  { key: 'night_owl',         icon: '🦉', name: 'Night Owl',        desc: 'Race late at night' },
-  { key: 'early_bird',        icon: '🐦', name: 'Early Bird',       desc: 'Race early morning' },
-  { key: 'weekend_warrior',   icon: '🎉', name: 'Weekend Warrior',  desc: 'Race on a weekend' },
-  { key: 'friday_racer',      icon: '🍻', name: 'Friday Night',     desc: 'Race on a Friday' },
+  { key: 'night_owl',         icon: '🦉', name: 'Night Owl',        desc: 'Race late at night', cat: 'timing' },
+  { key: 'early_bird',        icon: '🐦', name: 'Early Bird',       desc: 'Race early morning', cat: 'timing' },
+  { key: 'weekend_warrior',   icon: '🎉', name: 'Weekend Warrior',  desc: 'Race on a weekend', cat: 'timing' },
+  { key: 'friday_racer',      icon: '🍻', name: 'Friday Night',     desc: 'Race on a Friday', cat: 'timing' },
   // Special
-  { key: 'team_player',       icon: '🤝', name: 'Team Player',      desc: 'Racing on the Team plan' },
-  { key: 'fuel_saver',        icon: '⛽', name: 'Fuel Saver',       desc: 'Engineer tracked your fuel/lap' },
+  { key: 'team_player',       icon: '🤝', name: 'Team Player',      desc: 'Racing on the Team plan', cat: 'special' },
+  { key: 'fuel_saver',        icon: '⛽', name: 'Fuel Saver',       desc: 'Engineer tracked your fuel/lap', cat: 'special' },
+];
+const BADGE_CATEGORIES = [
+  { key: 'milestones',  label: 'Milestones' },
+  { key: 'streaks',     label: 'Streaks' },
+  { key: 'performance', label: 'Performance' },
+  { key: 'sims',        label: 'Sim Variety' },
+  { key: 'tracks',      label: 'Track Variety' },
+  { key: 'endurance',   label: 'Endurance' },
+  { key: 'timing',      label: 'Timing' },
+  { key: 'special',     label: 'Special' },
 ];
 
 function renderRank() {
@@ -868,18 +889,29 @@ function renderRank() {
 }
 
 async function renderBadges() {
-  const grid = document.getElementById('badgesGrid');
+  const container = document.getElementById('badgesGroups');
   let unlocked = [];
   try {
     const res = await sb.from('achievements').select('badge_key').eq('user_id', ST.user.id);
     if (res.data) unlocked = res.data.map(function(a){ return a.badge_key; });
   } catch (e) {}
-  grid.innerHTML = BADGE_CATALOG.map(function(b){
-    const on = unlocked.indexOf(b.key) !== -1;
-    return '<div class="badge' + (on ? ' unlocked' : '') + '">' +
-      '<div class="badge-icon">' + b.icon + '</div>' +
-      '<div class="badge-name">' + esc(b.name) + '</div>' +
-      '<div class="badge-desc">' + esc(b.desc) + '</div>' +
+
+  document.getElementById('badgesCount').textContent = unlocked.length + ' / ' + BADGE_CATALOG.length + ' unlocked';
+
+  container.innerHTML = BADGE_CATEGORIES.map(function(cat){
+    const items = BADGE_CATALOG.filter(function(b){ return b.cat === cat.key; });
+    const catUnlocked = items.filter(function(b){ return unlocked.indexOf(b.key) !== -1; }).length;
+    const badgesHtml = items.map(function(b){
+      const on = unlocked.indexOf(b.key) !== -1;
+      return '<div class="badge' + (on ? ' unlocked' : '') + '">' +
+        '<div class="badge-icon">' + b.icon + '</div>' +
+        '<div class="badge-name">' + esc(b.name) + '</div>' +
+        '<div class="badge-desc">' + esc(b.desc) + '</div>' +
+      '</div>';
+    }).join('');
+    return '<div class="badge-group">' +
+      '<div class="badge-group-label">' + esc(cat.label) + ' <span class="badge-group-tally">' + catUnlocked + '/' + items.length + '</span></div>' +
+      '<div class="badges-grid">' + badgesHtml + '</div>' +
     '</div>';
   }).join('');
 }
