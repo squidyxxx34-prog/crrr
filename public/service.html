@@ -793,12 +793,44 @@ const RANKS = [
   { key: 'legend',   name: 'Legend',    min: 40, icon: 'L' },
 ];
 const BADGE_CATALOG = [
-  { key: 'first_race',    icon: '🏁', name: 'First Blood',  desc: 'Complete 1 race' },
-  { key: 'five_races',    icon: '⚙️', name: 'Getting Serious', desc: '5 races completed' },
-  { key: 'fifteen_races', icon: '🏆', name: 'Veteran',      desc: '15 races completed' },
-  { key: 'forty_races',   icon: '👑', name: 'Legend',       desc: '40 races completed' },
-  { key: 'podium',        icon: '🥇', name: 'Podium',       desc: 'Finish P3 or better' },
-  { key: 'week_streak',   icon: '🔥', name: 'On Fire',      desc: '7-day streak' },
+  // Milestones
+  { key: 'first_race',        icon: '🏁', name: 'First Blood',      desc: 'Complete your first race' },
+  { key: 'five_races',        icon: '⚙️', name: 'Getting Serious',  desc: '5 races completed' },
+  { key: 'fifteen_races',     icon: '🏆', name: 'Veteran',          desc: '15 races completed' },
+  { key: 'forty_races',       icon: '👑', name: 'Legend',           desc: '40 races completed' },
+  { key: 'seventyfive_races', icon: '💎', name: 'Diamond',          desc: '75 races completed' },
+  { key: 'century',           icon: '🌟', name: 'Century Club',     desc: '100 races completed' },
+  // Streaks
+  { key: 'streak_3',          icon: '⚡', name: 'Warming Up',       desc: '3-day streak' },
+  { key: 'streak_7',          icon: '🔥', name: 'On Fire',          desc: '7-day streak' },
+  { key: 'streak_14',         icon: '🌋', name: 'Unstoppable',      desc: '14-day streak' },
+  { key: 'streak_30',         icon: '☄️', name: 'Obsessed',         desc: '30-day streak' },
+  // Performance
+  { key: 'podium',            icon: '🥇', name: 'Podium',           desc: 'Finish P3 or better' },
+  { key: 'race_winner',       icon: '🏅', name: 'Race Winner',      desc: 'Finish P1' },
+  { key: 'top_ten',           icon: '🎯', name: 'Points Finish',    desc: 'Finish in the top 10' },
+  { key: 'three_podiums',     icon: '🥈', name: 'Consistent',       desc: '3 podium finishes' },
+  { key: 'ten_podiums',       icon: '🏆', name: 'Podium Regular',   desc: '10 podium finishes' },
+  // Sim variety
+  { key: 'lmu_driver',        icon: '🟦', name: 'Le Mans Rookie',   desc: 'First LMU race' },
+  { key: 'acc_driver',        icon: '🟩', name: 'GT Driver',        desc: 'First ACC race' },
+  { key: 'iracing_driver',    icon: '🟨', name: 'Sim Racer',        desc: 'First iRacing race' },
+  { key: 'triple_threat',     icon: '🔺', name: 'Triple Threat',    desc: 'Raced LMU, ACC and iRacing' },
+  // Track variety
+  { key: 'five_tracks',       icon: '🗺️', name: 'Explorer',         desc: 'Raced 5 different tracks' },
+  { key: 'ten_tracks',        icon: '🌍', name: 'Globetrotter',     desc: 'Raced 10 different tracks' },
+  { key: 'track_specialist',  icon: '📍', name: 'Track Specialist', desc: '5 races on the same track' },
+  // Endurance
+  { key: 'marathon',          icon: '🕐', name: 'Marathon',         desc: '20+ laps in one session' },
+  { key: 'iron_legs',         icon: '🦵', name: 'Iron Legs',        desc: '50+ laps in one session' },
+  // Time-based
+  { key: 'night_owl',         icon: '🦉', name: 'Night Owl',        desc: 'Race late at night' },
+  { key: 'early_bird',        icon: '🐦', name: 'Early Bird',       desc: 'Race early morning' },
+  { key: 'weekend_warrior',   icon: '🎉', name: 'Weekend Warrior',  desc: 'Race on a weekend' },
+  { key: 'friday_racer',      icon: '🍻', name: 'Friday Night',     desc: 'Race on a Friday' },
+  // Special
+  { key: 'team_player',       icon: '🤝', name: 'Team Player',      desc: 'Racing on the Team plan' },
+  { key: 'fuel_saver',        icon: '⛽', name: 'Fuel Saver',       desc: 'Engineer tracked your fuel/lap' },
 ];
 
 function renderRank() {
