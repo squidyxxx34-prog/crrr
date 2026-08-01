@@ -469,7 +469,7 @@ async function loadTranscripts() {
       .select('*').eq('user_id', ST.user.id)
       .order('created_at', {ascending:false}).limit(60);
     if (error || !data || data.length===0) {
-      list.innerHTML = '<div class="empty-state">No radio calls logged yet — start a session and they\\'ll show up here.</div>';
+      list.innerHTML = '<div class="empty-state">No radio calls logged yet — start a session and they will show up here.</div>';
       return;
     }
     // group by track+date
