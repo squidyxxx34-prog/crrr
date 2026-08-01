@@ -195,6 +195,35 @@
     .team-add button{background:var(--gold);border:none;color:var(--black);font-family:var(--display);font-weight:700;font-size:12.5px;padding:11px 20px;border-radius:var(--r-pill);cursor:pointer;white-space:nowrap}
 
     .acc-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line-soft)}
+
+    /* GAMIFICATION */
+    .rank-row{display:flex;align-items:center;gap:18px;margin-bottom:18px}
+    .rank-badge{width:52px;height:52px;border-radius:50%;flex-shrink:0;
+      background:radial-gradient(circle at 35% 28%, #3d3730, #121212 72%);border:1px solid var(--gold-soft);
+      display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:20px;color:var(--gold)}
+    .rank-name{font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:-.2px}
+    .rank-next{font-family:var(--mono);font-size:11px;color:var(--dim2);margin-top:3px}
+    .rank-bar-track{height:6px;border-radius:var(--r-pill);background:rgba(255,255,255,.06);overflow:hidden}
+    .rank-bar-fill{height:100%;background:var(--gold);border-radius:var(--r-pill);transition:width .4s ease}
+    .streak-row{display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line-soft)}
+    .streak-flame{font-size:18px}
+    .streak-text{font-family:var(--mono);font-size:12px;color:var(--dim)}
+    .streak-text b{color:var(--gold);font-weight:600}
+
+    .badges-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+    .badge{border:1px solid var(--line-soft);border-radius:var(--r-md);padding:16px 12px;text-align:center;opacity:.35;filter:grayscale(1)}
+    .badge.unlocked{opacity:1;filter:none;border-color:var(--gold-soft);background:var(--gold-dim)}
+    .badge-icon{font-size:22px;margin-bottom:8px}
+    .badge-name{font-family:var(--display);font-weight:600;font-size:11.5px;letter-spacing:.2px}
+    .badge-desc{font-family:var(--mono);font-size:8.5px;color:var(--dim2);margin-top:4px;line-height:1.4}
+
+    .lb-row{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border:1px solid var(--line-soft);border-radius:var(--r-md);margin-bottom:8px}
+    .lb-left{display:flex;align-items:center;gap:12px}
+    .lb-rank{font-family:var(--mono);font-size:12px;color:var(--dim2);width:20px}
+    .lb-rank.gold{color:var(--gold);font-weight:700}
+    .lb-name{font-size:13.5px}
+    .lb-stat{font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+    .lb-locked{padding:20px;text-align:center;border:1px dashed var(--line);border-radius:var(--r-md);color:var(--dim2);font-size:12.5px;font-family:var(--mono)}
     .acc-row:last-child{border-bottom:none}
     .acc-label{font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;color:var(--dim2);text-transform:uppercase}
     .acc-val{font-size:14px;color:var(--paper)}
@@ -314,6 +343,28 @@
         <section class="page active" id="page-overview">
           <div class="page-title">Welcome back.</div>
           <div class="page-sub" id="sleft">—</div>
+
+          <div class="dash-card">
+            <div class="dash-card-kicker">your rank</div>
+            <div class="rank-row">
+              <div class="rank-badge" id="rankBadge">—</div>
+              <div style="flex:1">
+                <div class="rank-name" id="rankName">Rookie</div>
+                <div class="rank-next" id="rankNext">—</div>
+              </div>
+            </div>
+            <div class="rank-bar-track"><div class="rank-bar-fill" id="rankBar" style="width:0%"></div></div>
+            <div class="streak-row">
+              <span class="streak-flame">🔥</span>
+              <span class="streak-text" id="streakText">No streak yet</span>
+            </div>
+          </div>
+
+          <div class="dash-card">
+            <div class="dash-card-kicker">badges</div>
+            <div class="badges-grid" id="badgesGrid"></div>
+          </div>
+
           <div class="dash-card carbon">
             <div class="dash-card-kicker">the daemon</div>
             <div class="dl-row">
@@ -375,6 +426,12 @@
           <div class="page-title">Team</div>
           <div class="page-sub">Drivers on your account.</div>
           <div class="dash-card">
+            <div class="dash-card-kicker">leaderboard</div>
+            <div class="dash-card-title">Who's put in the laps</div>
+            <div id="leaderboardList"><div class="empty-state">Loading...</div></div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-kicker">roster</div>
             <div class="team-list" id="teamList"></div>
             <div class="team-add">
               <input id="teamEmailInput" type="email" placeholder="driver@email.com"/>
@@ -486,11 +543,11 @@ async function boot(user) {
 
 async function loadPlan(user) {
   try {
-    const res = await sb.from('profiles').select('plan,sessions_this_month,sessions_reset_at').eq('id', user.id).single();
+    const res = await sb.from('profiles').select('plan,sessions_this_month,sessions_reset_at,total_sessions,current_streak,best_streak').eq('id', user.id).single();
     const data = res.data;
     if (!data) {
       await sb.from('profiles').upsert({ id: user.id, plan: 'free', sessions_this_month: 0, sessions_reset_at: new Date().toISOString() }, { onConflict: 'id' });
-      ST.plan = 'free'; ST.sessions = 0;
+      ST.plan = 'free'; ST.sessions = 0; ST.totalSessions = 0; ST.streak = 0; ST.bestStreak = 0;
     } else {
       const reset = new Date(data.sessions_reset_at), now = new Date();
       if (now.getMonth() !== reset.getMonth() || now.getFullYear() !== reset.getFullYear()) {
@@ -500,8 +557,11 @@ async function loadPlan(user) {
         ST.sessions = data.sessions_this_month || 0;
       }
       ST.plan = data.plan || 'free';
+      ST.totalSessions = data.total_sessions || 0;
+      ST.streak = data.current_streak || 0;
+      ST.bestStreak = data.best_streak || 0;
     }
-  } catch (e) { ST.plan = 'free'; ST.sessions = 0; }
+  } catch (e) { ST.plan = 'free'; ST.sessions = 0; ST.totalSessions = 0; ST.streak = 0; ST.bestStreak = 0; }
 }
 
 function gotoDash() {
@@ -529,7 +589,9 @@ function gotoDash() {
 
   loadStrategies();
   loadTranscripts();
-  if (ST.plan === 'team') loadTeam();
+  renderRank();
+  renderBadges();
+  if (ST.plan === 'team') { loadTeam(); loadLeaderboard(); }
 }
 
 // ══ PAGE NAVIGATION ══
@@ -696,6 +758,89 @@ async function addTeamMember() {
 }
 async function removeTeamMember(id) {
   try { await sb.from('team_members').delete().eq('id', id); loadTeam(); } catch (e) {}
+}
+
+// ══ GAMIFICATION ══
+const RANKS = [
+  { key: 'rookie',   name: 'Rookie',    min: 0,  icon: 'R' },
+  { key: 'pro',      name: 'Pro Driver', min: 5,  icon: 'P' },
+  { key: 'veteran',  name: 'Veteran',   min: 15, icon: 'V' },
+  { key: 'legend',   name: 'Legend',    min: 40, icon: 'L' },
+];
+const BADGE_CATALOG = [
+  { key: 'first_race',    icon: '🏁', name: 'First Blood',  desc: 'Complete 1 race' },
+  { key: 'five_races',    icon: '⚙️', name: 'Getting Serious', desc: '5 races completed' },
+  { key: 'fifteen_races', icon: '🏆', name: 'Veteran',      desc: '15 races completed' },
+  { key: 'forty_races',   icon: '👑', name: 'Legend',       desc: '40 races completed' },
+  { key: 'podium',        icon: '🥇', name: 'Podium',       desc: 'Finish P3 or better' },
+  { key: 'week_streak',   icon: '🔥', name: 'On Fire',      desc: '7-day streak' },
+];
+
+function renderRank() {
+  const total = ST.totalSessions || 0;
+  let current = RANKS[0], next = RANKS[1];
+  for (let i = 0; i < RANKS.length; i++) {
+    if (total >= RANKS[i].min) current = RANKS[i];
+    if (total < RANKS[i].min) { next = RANKS[i]; break; }
+    next = null;
+  }
+  document.getElementById('rankBadge').textContent = current.icon;
+  document.getElementById('rankName').textContent = current.name;
+
+  if (next) {
+    const span = next.min - current.min;
+    const progress = Math.min(100, Math.round(((total - current.min) / span) * 100));
+    document.getElementById('rankBar').style.width = progress + '%';
+    document.getElementById('rankNext').textContent = (next.min - total) + ' more session' + ((next.min - total) !== 1 ? 's' : '') + ' to ' + next.name;
+  } else {
+    document.getElementById('rankBar').style.width = '100%';
+    document.getElementById('rankNext').textContent = 'Top rank reached';
+  }
+
+  const streak = ST.streak || 0;
+  const streakEl = document.getElementById('streakText');
+  if (streak >= 2) {
+    streakEl.innerHTML = '<b>' + streak + '-day streak</b> — best: ' + (ST.bestStreak || streak) + ' days';
+  } else {
+    streakEl.textContent = 'Race today to start a streak';
+  }
+}
+
+async function renderBadges() {
+  const grid = document.getElementById('badgesGrid');
+  let unlocked = [];
+  try {
+    const res = await sb.from('achievements').select('badge_key').eq('user_id', ST.user.id);
+    if (res.data) unlocked = res.data.map(function(a){ return a.badge_key; });
+  } catch (e) {}
+  grid.innerHTML = BADGE_CATALOG.map(function(b){
+    const on = unlocked.indexOf(b.key) !== -1;
+    return '<div class="badge' + (on ? ' unlocked' : '') + '">' +
+      '<div class="badge-icon">' + b.icon + '</div>' +
+      '<div class="badge-name">' + esc(b.name) + '</div>' +
+      '<div class="badge-desc">' + esc(b.desc) + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function loadLeaderboard() {
+  const list = document.getElementById('leaderboardList');
+  try {
+    const res = await sb.rpc('get_team_leaderboard', { owner: ST.user.id });
+    const data = res.data;
+    if (res.error || !data || data.length === 0) {
+      list.innerHTML = '<div class="lb-locked">Add drivers to your roster to see the leaderboard.</div>';
+      return;
+    }
+    list.innerHTML = data.map(function(row, i){
+      return '<div class="lb-row"><div class="lb-left">' +
+        '<span class="lb-rank' + (i === 0 ? ' gold' : '') + '">#' + (i + 1) + '</span>' +
+        '<span class="lb-name">' + esc(row.driver_email) + '</span>' +
+        '</div><span class="lb-stat">' + (row.total_sessions || 0) + ' races' + (row.best_position ? ' · best P' + row.best_position : '') + '</span></div>';
+    }).join('');
+  } catch (e) {
+    list.innerHTML = '<div class="lb-locked">Leaderboard unavailable.</div>';
+  }
 }
 
 function esc(s) {
