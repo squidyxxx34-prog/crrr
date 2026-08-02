@@ -232,6 +232,9 @@
     .badges-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
     .badge{border:1px solid var(--line-soft);border-radius:var(--r-md);padding:16px 12px;text-align:center;opacity:.35;filter:grayscale(1)}
     .badge.unlocked{opacity:1;filter:none;border-color:var(--gold-soft);background:var(--gold-dim)}
+    .badge.plan-locked{opacity:.7;filter:none;border-color:var(--dim2);cursor:pointer}
+    .badge.plan-locked:hover{border-color:var(--gold-soft)}
+    .plan-locked-desc{color:var(--gold) !important;font-weight:600}
     .badge-icon{font-size:22px;margin-bottom:8px}
     .badge-name{font-family:var(--display);font-weight:600;font-size:11.5px;letter-spacing:.2px}
     .badge-desc{font-family:var(--mono);font-size:8.5px;color:var(--dim2);margin-top:4px;line-height:1.4}
@@ -839,9 +842,19 @@ const BADGE_CATALOG = [
   { key: 'early_bird',        icon: '🐦', name: 'Early Bird',       desc: 'Race early morning', cat: 'timing' },
   { key: 'weekend_warrior',   icon: '🎉', name: 'Weekend Warrior',  desc: 'Race on a weekend', cat: 'timing' },
   { key: 'friday_racer',      icon: '🍻', name: 'Friday Night',     desc: 'Race on a Friday', cat: 'timing' },
-  // Special
-  { key: 'team_player',       icon: '🤝', name: 'Team Player',      desc: 'Racing on the Team plan', cat: 'special' },
+  // Special (plan-exclusive)
+  { key: 'pro_member',        icon: '💠', name: 'Pro Status',       desc: 'You have Pro', cat: 'special', requiresPlan: 'pro' },
+  { key: 'team_player',       icon: '🤝', name: 'Team Player',      desc: 'You have Team', cat: 'special', requiresPlan: 'team' },
   { key: 'fuel_saver',        icon: '⛽', name: 'Fuel Saver',       desc: 'Engineer tracked your fuel/lap', cat: 'special' },
+  // Superhuman
+  { key: 'two_fifty_races',    icon: '🤖', name: 'Machine',         desc: '250 races completed', cat: 'superhuman' },
+  { key: 'five_hundred_races', icon: '♾️', name: 'Immortal',        desc: '500 races completed', cat: 'superhuman' },
+  { key: 'thousand_races',     icon: '🛸', name: 'Beyond Human',    desc: '1000 races completed', cat: 'superhuman' },
+  { key: 'streak_60',          icon: '🗿', name: 'Iron Will',       desc: '60-day streak', cat: 'superhuman' },
+  { key: 'streak_100',         icon: '🌌', name: 'No Days Off',     desc: '100-day streak', cat: 'superhuman' },
+  { key: 'streak_365',         icon: '🎆', name: 'A Full Year',     desc: '365-day streak', cat: 'superhuman' },
+  { key: 'twentyfive_podiums', icon: '🏆', name: 'Podium Machine',  desc: '25 podium finishes', cat: 'superhuman' },
+  { key: 'thousand_laps',      icon: '🌀', name: 'Odometer Broken', desc: '1000 laps raced lifetime', cat: 'superhuman' },
 ];
 const BADGE_CATEGORIES = [
   { key: 'milestones',  label: 'Milestones' },
@@ -852,6 +865,7 @@ const BADGE_CATEGORIES = [
   { key: 'endurance',   label: 'Endurance' },
   { key: 'timing',      label: 'Timing' },
   { key: 'special',     label: 'Special' },
+  { key: 'superhuman',  label: 'Superhuman' },
 ];
 
 function renderRank() {
@@ -903,10 +917,15 @@ async function renderBadges() {
     const catUnlocked = items.filter(function(b){ return unlocked.indexOf(b.key) !== -1; }).length;
     const badgesHtml = items.map(function(b){
       const on = unlocked.indexOf(b.key) !== -1;
-      return '<div class="badge' + (on ? ' unlocked' : '') + '">' +
+      const planLocked = !on && b.requiresPlan && ST.plan !== b.requiresPlan && !(b.requiresPlan === 'pro' && ST.plan === 'team');
+      let cls = 'badge' + (on ? ' unlocked' : '') + (planLocked ? ' plan-locked' : '');
+      let desc = esc(b.desc);
+      if (planLocked) desc = '🔒 Requires ' + b.requiresPlan.toUpperCase();
+      const clickAttr = planLocked ? ' onclick="gateCheckout(\'' + b.requiresPlan + '\')"' : '';
+      return '<div class="' + cls + '"' + clickAttr + '>' +
         '<div class="badge-icon">' + b.icon + '</div>' +
         '<div class="badge-name">' + esc(b.name) + '</div>' +
-        '<div class="badge-desc">' + esc(b.desc) + '</div>' +
+        '<div class="badge-desc' + (planLocked ? ' plan-locked-desc' : '') + '">' + desc + '</div>' +
       '</div>';
     }).join('');
     return '<div class="badge-group">' +
