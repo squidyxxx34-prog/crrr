@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#0a0a09"/>
+<title>Terms of Service — PitWall AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --black:#0a0a09; --paper:#eee9dd; --dim:#948e80; --dim2:#5a5548;
+    --gold:#cf9a4e; --line:rgba(255,255,255,.09);
+    --display:'Space Grotesk',sans-serif; --body:'DM Sans',sans-serif; --mono:'Share Tech Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation}
+  body{background:var(--black);color:var(--paper);font-family:var(--body);font-weight:300;line-height:1.7;overflow-x:hidden}
+  nav{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;
+    padding:18px 32px;padding-top:max(18px, env(safe-area-inset-top));background:rgba(10,10,9,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .logo{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.3px;text-decoration:none;color:var(--paper)}
+  .logo b{color:var(--gold);font-weight:700}
+  nav a.back{font-family:var(--mono);font-size:12px;color:var(--dim);text-decoration:none}
+  .wrap{max-width:720px;margin:0 auto;padding:56px 28px 100px;padding-bottom:max(100px, calc(56px + env(safe-area-inset-bottom)))}
+  h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,5vw,42px);letter-spacing:-1px;margin-bottom:8px}
+  .updated{font-family:var(--mono);font-size:11.5px;color:var(--dim2);margin-bottom:44px}
+  h2{font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:-.2px;margin:38px 0 12px}
+  p{font-size:14.5px;color:var(--dim);margin-bottom:12px}
+  ul{margin:0 0 12px 20px}
+  li{font-size:14.5px;color:var(--dim);margin-bottom:8px}
+  strong{color:var(--paper);font-weight:500}
+  a{color:var(--gold)}
+  .note{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:32px;background:rgba(207,154,78,.05)}
+  .note p{color:var(--dim);font-size:13px;margin:0}
+  footer{border-top:1px solid var(--line);padding:32px;padding-bottom:max(32px, env(safe-area-inset-bottom));
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:var(--dim2);font-family:var(--mono);font-size:11px}
+  footer a{color:var(--dim2);text-decoration:none}
+  @media (max-width:480px){ .wrap{padding:40px 20px 80px} nav{padding:16px 20px} }
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">PITWALL<b>.</b>AI</a>
+  <a href="/" class="back">← Back to home</a>
+</nav>
+
+<div class="wrap">
+  <h1>Terms of Service</h1>
+  <div class="updated">Last updated: August 2026</div>
+
+  <div class="note">
+    <p><strong>This is a starting draft, not legal advice.</strong> It has not been reviewed by a lawyer. Jurisdiction and governing law are left as placeholders below — have these terms reviewed before relying on them for a real launch, especially if you have users in the EU.</p>
+  </div>
+
+  <h2>1. What PitWall AI is</h2>
+  <p>PitWall AI ("we", "us", "the Service") provides an AI race engineer for sim racing. The Service has two parts: a web dashboard, and a downloadable desktop application (the "daemon") that reads live telemetry from a supported simulator (Le Mans Ultimate, ACC, iRacing) running on your PC and provides spoken and written strategic commentary using a third-party AI model.</p>
+
+  <h2>2. Accounts</h2>
+  <p>You need an account to use the Service. You're responsible for keeping your login credentials secure and for all activity under your account. You must be old enough to legally enter into this agreement in your country of residence.</p>
+
+  <h2>3. Plans, billing, and cancellation</h2>
+  <ul>
+    <li><strong>Free plan</strong> includes 3 sessions per calendar month, resetting on the 1st.</li>
+    <li><strong>Pro</strong> and <strong>Team</strong> are paid monthly subscriptions billed in advance through Stripe, our payment processor. We do not store your card details ourselves.</li>
+    <li>Subscriptions renew automatically each month until cancelled. You can cancel at any time; you'll retain access until the end of the current billing period.</li>
+    <li>Fees are non-refundable except where required by law.</li>
+    <li>We may change prices with reasonable notice; continued use after a price change means you accept the new price.</li>
+  </ul>
+
+  <h2>4. The daemon software</h2>
+  <p>The daemon is provided for use with the Service only. We grant you a limited, non-exclusive, non-transferable license to run it on your own hardware for personal use. You may not redistribute, reverse-engineer for competing purposes, or resell it. The daemon updates itself automatically to the latest version we publish.</p>
+
+  <h2>5. AI-generated content</h2>
+  <p>Strategic advice, radio commentary, and race debriefs are generated by a third-party AI model based on live telemetry and are provided for entertainment and informational purposes only. They are not professional motorsport engineering advice, are not guaranteed to be accurate, and should not be relied on for safety-critical decisions in real-world driving.</p>
+
+  <h2>6. Acceptable use</h2>
+  <p>Don't use the Service to: violate any law; attempt to disrupt, reverse-engineer, or gain unauthorized access to our systems; abuse the free tier through multiple accounts to bypass session limits; or resell access without our written permission.</p>
+
+  <h2>7. Team plan and shared data</h2>
+  <p>On the Team plan, the account owner may invite other drivers by email. Aggregate statistics (session counts, best finishing positions) about invited drivers who hold their own account may be visible to the team owner via the leaderboard feature.</p>
+
+  <h2>8. Termination</h2>
+  <p>You may stop using the Service and delete your account at any time. We may suspend or terminate accounts that violate these terms, with notice where practical.</p>
+
+  <h2>9. Disclaimer and limitation of liability</h2>
+  <p>The Service is provided "as is" without warranties of any kind. To the maximum extent permitted by law, we are not liable for indirect, incidental, or consequential damages arising from your use of the Service, including reliance on AI-generated advice.</p>
+
+  <h2>10. Changes to these terms</h2>
+  <p>We may update these terms from time to time. Material changes will be reflected by updating the date above. Continued use of the Service after changes means you accept the updated terms.</p>
+
+  <h2>11. Governing law</h2>
+  <p><strong>[Placeholder — insert your country/state of incorporation or residence, and the courts with jurisdiction over disputes.]</strong></p>
+
+  <h2>12. Contact</h2>
+  <p>Questions about these terms: <strong>[insert contact email]</strong></p>
+</div>
+
+<footer>
+  <div>PITWALL.AI</div>
+  <div><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a></div>
+</footer>
+</body>
+</html>
