@@ -245,7 +245,7 @@
     <div class="demo-bar">
       <div class="demo-bar-l">
         <div class="rec-dot"></div>
-        <div class="demo-label">Live — Sandbox Session</div>
+        <div class="demo-label">Live — Real AI, Not Scripted</div>
       </div>
       <div class="demo-badge">Your Engineer</div>
     </div>
@@ -275,10 +275,10 @@
           <div class="radio-avatar">PW</div>
           <div>
             <div class="radio-name">Your Engineer</div>
-            <div class="radio-title">On the radio</div>
+            <div class="radio-title">On the radio — live from Groq</div>
           </div>
         </div>
-        <div class="msg-line" id="msgLine">Fuel's fine, tyres holding — settle in and find your rhythm.</div>
+        <div class="msg-line" id="msgLine">Move a slider — your engineer will actually think it through.</div>
         <div class="msg-status" id="msgStatus">Ready</div>
         <button class="listen-btn" id="listenBtn">▶ Hear it spoken</button>
       </div>
@@ -405,22 +405,13 @@
   const msgStatus = document.getElementById('msgStatus');
   const listenBtn = document.getElementById('listenBtn');
 
-  function buildMessage(fuel, tyre, gap){
-    if (fuel < 15)  return "Fuel's critical, box this lap, we can't stretch it further.";
-    if (tyre < 35)  return "Tyres are gone, box box, we've hit the cliff.";
-    if (gap < 10 && gap > 0) return "Gap's closing fast, push now, defend the inside line.";
-    if (fuel < 35)  return "Fuel's getting tight, start saving, pit window is close.";
-    if (tyre < 60)  return "Tyres are wearing, manage the rears, we're still in the window.";
-    return "Fuel's fine, tyres holding — settle in and find your rhythm.";
-  }
-
   function valClass(val, warnAt, dangerAt){
     if (val <= dangerAt) return 'danger';
     if (val <= warnAt) return 'warn';
     return '';
   }
 
-  function update(){
+  function readouts(){
     const fuel = parseInt(fuelSlider.value, 10);
     const tyre = parseInt(tyreSlider.value, 10);
     const gapRaw = parseInt(gapSlider.value, 10);
@@ -435,10 +426,60 @@
     gapVal.textContent = gap.toFixed(1) + 's';
     gapVal.className = 'ctrl-val ' + valClass(gapRaw, 15, 8);
 
-    msgLine.textContent = buildMessage(fuel, tyre, gapRaw);
+    return { fuel, tyre, gap };
   }
 
-  [fuelSlider, tyreSlider, gapSlider].forEach(s => s.addEventListener('input', update));
+  const SYS_PROMPT = "You are a professional sim racing engineer on the pit wall. Calm, precise, direct. " +
+    "Give SHORT advice — max 2 sentences, radio style. Never make up data beyond what you're given.";
+
+  let debounceTimer = null;
+  let lastCallAt = 0;
+  let reqSeq = 0;
+  const MIN_GAP_MS = 1200;
+
+  async function askRealEngineer(){
+    const { fuel, tyre, gap } = readouts();
+    const mySeq = ++reqSeq;
+
+    msgStatus.textContent = 'Engineer thinking...';
+    msgStatus.classList.remove('speaking');
+
+    const prompt = 'Telemetry: fuel ' + fuel + '%, tyre wear ' + tyre + '%, gap to car ahead ' + gap.toFixed(1) +
+      's. Give your radio call for this exact moment.';
+
+    try {
+      const res = await fetch('/api/brain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system: SYS_PROMPT, prompt: prompt, isQuestion: false }),
+      });
+      if (mySeq !== reqSeq) return; // a newer request superseded this one
+      if (!res.ok) throw new Error('bad status');
+      const data = await res.json();
+      const msg = (data.message || '').trim();
+      msgLine.textContent = (msg && msg.toUpperCase() !== 'SILENT') ? msg : "Nothing critical right now — holding steady.";
+      msgStatus.textContent = 'Ready';
+    } catch (e) {
+      if (mySeq !== reqSeq) return;
+      msgLine.textContent = "Engineer's offline for a second — try moving a slider again.";
+      msgStatus.textContent = 'Ready';
+    }
+  }
+
+  function scheduleAsk(){
+    readouts();
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const now = Date.now();
+      const wait = Math.max(0, MIN_GAP_MS - (now - lastCallAt));
+      setTimeout(() => { lastCallAt = Date.now(); askRealEngineer(); }, wait);
+    }, 550);
+  }
+
+  [fuelSlider, tyreSlider, gapSlider].forEach(s => {
+    s.addEventListener('input', readouts);
+    s.addEventListener('input', scheduleAsk);
+  });
 
   const scenarios = {
     clean:  { fuel:72, tyre:82, gap:35 },
@@ -449,7 +490,7 @@
     btn.addEventListener('click', ()=>{
       const s = scenarios[btn.dataset.scn];
       fuelSlider.value = s.fuel; tyreSlider.value = s.tyre; gapSlider.value = s.gap;
-      update();
+      scheduleAsk();
     });
   });
 
@@ -469,7 +510,7 @@
   window.speechSynthesis && window.speechSynthesis.getVoices();
   window.speechSynthesis && window.speechSynthesis.addEventListener('voiceschanged', ()=>window.speechSynthesis.getVoices());
 
-  update();
+  readouts();
 })();
 </script>
 
