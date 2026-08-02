@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#0a0a09"/>
+<title>Privacy Policy — PitWall AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --black:#0a0a09; --paper:#eee9dd; --dim:#948e80; --dim2:#5a5548;
+    --gold:#cf9a4e; --line:rgba(255,255,255,.09);
+    --display:'Space Grotesk',sans-serif; --body:'DM Sans',sans-serif; --mono:'Share Tech Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;touch-action:manipulation}
+  body{background:var(--black);color:var(--paper);font-family:var(--body);font-weight:300;line-height:1.7;overflow-x:hidden}
+  nav{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;
+    padding:18px 32px;padding-top:max(18px, env(safe-area-inset-top));background:rgba(10,10,9,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+  .logo{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.3px;text-decoration:none;color:var(--paper)}
+  .logo b{color:var(--gold);font-weight:700}
+  nav a.back{font-family:var(--mono);font-size:12px;color:var(--dim);text-decoration:none}
+  .wrap{max-width:720px;margin:0 auto;padding:56px 28px 100px;padding-bottom:max(100px, calc(56px + env(safe-area-inset-bottom)))}
+  h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,5vw,42px);letter-spacing:-1px;margin-bottom:8px}
+  .updated{font-family:var(--mono);font-size:11.5px;color:var(--dim2);margin-bottom:44px}
+  h2{font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:-.2px;margin:38px 0 12px}
+  p{font-size:14.5px;color:var(--dim);margin-bottom:12px}
+  ul{margin:0 0 12px 20px}
+  li{font-size:14.5px;color:var(--dim);margin-bottom:8px}
+  strong{color:var(--paper);font-weight:500}
+  a{color:var(--gold)}
+  .note{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:32px;background:rgba(207,154,78,.05)}
+  .note p{color:var(--dim);font-size:13px;margin:0}
+  table{width:100%;border-collapse:collapse;margin:16px 0 24px;font-size:13.5px}
+  th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:1.5px;color:var(--dim2);
+    text-transform:uppercase;padding:10px 12px;border-bottom:1px solid var(--line)}
+  td{padding:12px;border-bottom:1px solid rgba(255,255,255,.05);color:var(--dim);vertical-align:top}
+  td:first-child{color:var(--paper);font-weight:500;white-space:nowrap}
+  footer{border-top:1px solid var(--line);padding:32px;padding-bottom:max(32px, env(safe-area-inset-bottom));
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:var(--dim2);font-family:var(--mono);font-size:11px}
+  footer a{color:var(--dim2);text-decoration:none}
+  @media (max-width:480px){
+    .wrap{padding:40px 20px 80px} nav{padding:16px 20px}
+    table, thead, tbody, th, td, tr{display:block}
+    th{display:none}
+    tr{border-bottom:1px solid var(--line);padding:12px 0}
+    td{border:none;padding:4px 0}
+    td:first-child{padding-top:4px}
+  }
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="logo">PITWALL<b>.</b>AI</a>
+  <a href="/" class="back">← Back to home</a>
+</nav>
+
+<div class="wrap">
+  <h1>Privacy Policy</h1>
+  <div class="updated">Last updated: August 2026</div>
+
+  <div class="note">
+    <p><strong>This is a starting draft, not legal advice.</strong> It has not been reviewed by a lawyer. If you have users in the EU/UK, GDPR imposes specific obligations (lawful basis documentation, data processing agreements with each processor below, breach notification timelines) that go beyond this draft — have it reviewed before relying on it.</p>
+  </div>
+
+  <h2>1. What we collect</h2>
+  <ul>
+    <li><strong>Account data:</strong> email address, and name if you sign in with Google.</li>
+    <li><strong>Race telemetry & radio log:</strong> session summaries (sim, track, finishing position, lap count, fuel usage) and the text of what your engineer said during sessions, saved so you can review them in your dashboard.</li>
+    <li><strong>Usage data:</strong> session counts, current plan, and gamification progress (streaks, badges).</li>
+    <li><strong>Payment data:</strong> handled entirely by Stripe. We receive your subscription status and plan, not your card number.</li>
+    <li><strong>Team data:</strong> if you're on the Team plan, the email addresses you add to your roster.</li>
+  </ul>
+
+  <h2>2. What we don't collect</h2>
+  <p>The daemon reads telemetry locally on your PC to generate live commentary. Raw, frame-by-frame telemetry is not sent to our servers — only the session summary described above, once your session ends.</p>
+
+  <h2>3. Who we share data with</h2>
+  <p>We use the following processors to run the Service. Each has its own privacy policy governing how it handles data on our behalf.</p>
+  <table>
+    <thead><tr><th>Processor</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>Supabase</td><td>Database, authentication, and storage for your account, sessions, and radio log.</td></tr>
+      <tr><td>Stripe</td><td>Payment processing for Pro and Team subscriptions.</td></tr>
+      <tr><td>Groq</td><td>Processes session telemetry and your spoken questions to generate the AI engineer's responses (speech-to-text, language model, text-to-speech context).</td></tr>
+      <tr><td>Google</td><td>Optional sign-in (OAuth) if you choose "Continue with Google".</td></tr>
+    </tbody>
+  </table>
+  <p>We do not sell your data to third parties or use it for advertising.</p>
+
+  <h2>4. Where your data is processed</h2>
+  <p>Our processors above operate infrastructure that may be located outside your country of residence, including in the United States. Where required, transfers rely on the safeguards those providers publish (e.g. standard contractual clauses).</p>
+
+  <h2>5. How long we keep it</h2>
+  <p>Account and session data is kept for as long as your account is active. If you delete your account, we delete associated personal data within a reasonable period, except where we're required to retain records (e.g. billing history) by law.</p>
+
+  <h2>6. Your rights</h2>
+  <p>Depending on where you live, you may have the right to access, correct, export, or delete your personal data, and to object to certain processing. To exercise these rights, contact us at <strong>[insert contact email]</strong>.</p>
+
+  <h2>7. Cookies and local storage</h2>
+  <p>We use your browser's local storage to remember which plan you selected during checkout — nothing else. We don't use third-party advertising or tracking cookies.</p>
+
+  <h2>8. Children</h2>
+  <p>The Service is not directed at children under 16. We don't knowingly collect data from anyone under that age.</p>
+
+  <h2>9. Changes to this policy</h2>
+  <p>We may update this policy from time to time. Material changes will be reflected by updating the date above.</p>
+
+  <h2>10. Contact</h2>
+  <p>Questions about this policy or your data: <strong>[insert contact email]</strong></p>
+</div>
+
+<footer>
+  <div>PITWALL.AI</div>
+  <div><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a></div>
+</footer>
+</body>
+</html>
