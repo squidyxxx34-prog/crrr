@@ -452,7 +452,7 @@
       's. Give your radio call for this exact moment.';
 
     try {
-      const res = await fetch('/api/brain', {
+      const res = await fetch('/api/brain.js', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ system: SYS_PROMPT, prompt: prompt, isQuestion: false }),
