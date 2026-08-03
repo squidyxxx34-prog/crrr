@@ -458,15 +458,19 @@
         body: JSON.stringify({ system: SYS_PROMPT, prompt: prompt, isQuestion: false }),
       });
       if (mySeq !== reqSeq) return; // a newer request superseded this one
-      if (!res.ok) throw new Error('bad status');
+      if (!res.ok) {
+        let detail = '';
+        try { const errBody = await res.json(); detail = errBody.error || ''; } catch(_) {}
+        throw new Error('HTTP ' + res.status + (detail ? ' — ' + detail : ''));
+      }
       const data = await res.json();
       const msg = (data.message || '').trim();
       msgLine.textContent = (msg && msg.toUpperCase() !== 'SILENT') ? msg : "Nothing critical right now — holding steady.";
       msgStatus.textContent = 'Ready';
     } catch (e) {
       if (mySeq !== reqSeq) return;
-      msgLine.textContent = "Engineer's offline for a second — try moving a slider again.";
-      msgStatus.textContent = 'Ready';
+      msgLine.textContent = "Debug: " + (e && e.message ? e.message : String(e));
+      msgStatus.textContent = 'Error — see message above';
     }
   }
 
