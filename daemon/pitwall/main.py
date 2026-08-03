@@ -1,7 +1,7 @@
 """
 PitWall AI — Race Engineer Daemon v5 FINAL
 - LMU / ACC / iRacing shared memory (robust parsing)
-- Groq llama-3.1-8b-instant (ultra-fast reasoning)
+- Groq openai/gpt-oss-20b (ultra-fast reasoning)
 - Groq whisper-large-v3-turbo (STT, push-to-talk)
 - edge-tts en-GB-RyanNeural (TTS, British male)
 - Real strategy: pit window, fuel laps, gap trend
@@ -185,9 +185,9 @@ def stt(wav_bytes, key):
         log.warning(f'STT: {e}')
     return ''
 
-# ── AI — Groq llama-3.1-8b-instant (fastest), free ───────────────────────────
+# ── AI — Groq openai/gpt-oss-20b (fastest), free ───────────────────────────
 def ask_ai(system, prompt, key, smart=False):
-    model = 'llama-3.3-70b-versatile' if smart else 'llama-3.1-8b-instant'
+    model = 'openai/gpt-oss-120b' if smart else 'openai/gpt-oss-20b'
     try:
         r = requests.post(f'{GROQ_API}/chat/completions',
             headers={'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
