@@ -191,10 +191,10 @@ def ask_ai(system, prompt, key, smart=False):
     try:
         r = requests.post(f'{GROQ_API}/chat/completions',
             headers={'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
-            json={'model': model, 'max_tokens': 90, 'temperature': 0.6,
+            json={'model': model, 'max_tokens': 300, 'reasoning_effort': 'low', 'temperature': 0.6,
                   'messages': [{'role': 'system', 'content': system},
                                 {'role': 'user',   'content': prompt}]},
-            timeout=6)
+            timeout=10)
         if r.status_code == 200:
             return r.json()['choices'][0]['message']['content'].strip()
     except Exception as e:
