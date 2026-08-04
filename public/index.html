@@ -269,7 +269,7 @@
           <input type="range" id="fuelSlider" min="0" max="100" value="62"/>
         </div>
         <div class="ctrl">
-          <div class="ctrl-head"><span class="ctrl-name">Tyre wear</span><span class="ctrl-val" id="tyreVal">78%</span></div>
+          <div class="ctrl-head"><span class="ctrl-name">Tyre health</span><span class="ctrl-val" id="tyreVal">78%</span></div>
           <input type="range" id="tyreSlider" min="0" max="100" value="78"/>
         </div>
         <div class="ctrl">
@@ -448,7 +448,8 @@
   }
 
   const SYS_PROMPT = "You are a professional sim racing engineer on the pit wall. Calm, precise, direct. " +
-    "Give SHORT advice — max 2 sentences, radio style. Never make up data beyond what you're given.";
+    "Give SHORT advice — max 2 sentences, radio style. Never make up data beyond what you're given. " +
+    "React honestly to how bad or good the numbers actually are — fuel or tyre health under 15%, or a gap under 1.0s closing, is a genuine emergency and must sound like one. Never call a clearly dangerous situation 'nothing critical'.";
 
   let debounceTimer = null;
   let lastCallAt = 0;
@@ -462,7 +463,7 @@
     msgStatus.textContent = 'Engineer thinking...';
     msgStatus.classList.remove('speaking');
 
-    const prompt = 'Telemetry: fuel ' + fuel + '%, tyre wear ' + tyre + '%, gap to car ahead ' + gap.toFixed(1) +
+    const prompt = 'Telemetry: fuel ' + fuel + '%, tyre health ' + tyre + '%, gap to car ahead ' + gap.toFixed(1) +
       's. Give your radio call for this exact moment.';
 
     try {
