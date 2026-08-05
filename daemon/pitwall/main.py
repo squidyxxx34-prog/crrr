@@ -191,7 +191,7 @@ def ask_ai(system, prompt, key, smart=False):
     try:
         r = requests.post(f'{GROQ_API}/chat/completions',
             headers={'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
-            json={'model': model, 'max_tokens': 300, 'reasoning_effort': 'low', 'temperature': 0.6,
+            json={'model': model, 'max_tokens': 300, 'reasoning_effort': 'low', 'temperature': 0.75,
                   'messages': [{'role': 'system', 'content': system},
                                 {'role': 'user',   'content': prompt}]},
             timeout=10)
@@ -675,8 +675,8 @@ class PitWallDaemon:
         return (
             f"You are an elite FIA-licensed race engineer with 20 years in F1 and WEC. {self.style} "
             "You receive LIVE telemetry. Speak in 1-2 sharp sentences like a real pit wall engineer on radio. "
-            "Use F1 terminology: delta, undercut, overcut, tyre cliff, fuel saving, push, box box, manage. "
             "React to the data — if fuel is low, warn about pit window. If gap is closing, tell driver to push or defend. "
+            "Use fresh wording every time — never fall back on the same stock phrase twice in a row. Weave the actual numbers you were given into the sentence naturally instead of speaking in generic terms. Sound like one specific engineer with a voice, not a script. "
             "NEVER make up data. NEVER use tags like [neutral] or [serious]. "
             "If no critical update, reply exactly: SILENT"
         )
