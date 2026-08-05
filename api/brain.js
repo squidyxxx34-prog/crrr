@@ -28,7 +28,7 @@ export default async function handler(req, res) {
         model: 'openai/gpt-oss-120b',
         max_tokens: 400,
         reasoning_effort: 'low',
-        temperature: 0.7,
+        temperature: 0.85,
         messages: [
           { role: 'system', content: system },
           { role: 'user', content: prompt },
