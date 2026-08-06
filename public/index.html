@@ -435,21 +435,31 @@
     const gapRaw = parseInt(gapSlider.value, 10);
     const gap = gapRaw / 10;
 
+    const fuelClass = valClass(fuel, 35, 15);
+    const tyreClass = valClass(tyre, 60, 35);
+    const gapClass = valClass(gapRaw, 15, 8);
+
     fuelVal.textContent = fuel + '%';
-    fuelVal.className = 'ctrl-val ' + valClass(fuel, 35, 15);
+    fuelVal.className = 'ctrl-val ' + fuelClass;
 
     tyreVal.textContent = tyre + '%';
-    tyreVal.className = 'ctrl-val ' + valClass(tyre, 60, 35);
+    tyreVal.className = 'ctrl-val ' + tyreClass;
 
     gapVal.textContent = gap.toFixed(1) + 's';
-    gapVal.className = 'ctrl-val ' + valClass(gapRaw, 15, 8);
+    gapVal.className = 'ctrl-val ' + gapClass;
 
-    return { fuel, tyre, gap };
+    // Severity is decided HERE, in code, deterministically — never left to the model.
+    let severity = 'NORMAL';
+    if (fuelClass === 'danger' || tyreClass === 'danger' || gapClass === 'danger') severity = 'CRITICAL';
+    else if (fuelClass === 'warn' || tyreClass === 'warn' || gapClass === 'warn') severity = 'CAUTION';
+
+    return { fuel, tyre, gap, severity };
   }
 
   const SYS_PROMPT = "You are a professional sim racing engineer on the pit wall. Calm, precise, direct. " +
     "ONE short radio call, under 18 words. Never more than one sentence. Never make up data beyond what you're given. " +
-    "React honestly to how bad or good the numbers actually are — fuel or tyre health under 15%, or a gap under 1.0s closing, is a genuine emergency and must sound like one. Never call a clearly dangerous situation 'nothing critical'. The same numbers should always get the same level of urgency — only the wording should vary, never the judgment. " +
+    "You will be told the exact severity level (CRITICAL, CAUTION, or NORMAL) — that judgment is already made for you, do not second-guess it or soften it. " +
+    "CRITICAL must sound urgent and call for action now. CAUTION should sound alert but controlled. NORMAL should sound calm and settled. " +
     "Use fresh phrasing each time — avoid repeating the exact same sentence — but reference the actual numbers you were given naturally instead of speaking in generic terms.";
 
   let debounceTimer = null;
@@ -458,14 +468,14 @@
   const MIN_GAP_MS = 1200;
 
   async function askRealEngineer(){
-    const { fuel, tyre, gap } = readouts();
+    const { fuel, tyre, gap, severity } = readouts();
     const mySeq = ++reqSeq;
 
     msgStatus.textContent = 'Engineer thinking...';
     msgStatus.classList.remove('speaking');
 
-    const prompt = 'Telemetry: fuel ' + fuel + '%, tyre health ' + tyre + '%, gap to car ahead ' + gap.toFixed(1) +
-      's. Give your radio call for this exact moment.';
+    const prompt = 'Severity: ' + severity + '. Telemetry: fuel ' + fuel + '%, tyre health ' + tyre +
+      '%, gap to car ahead ' + gap.toFixed(1) + 's. Give your radio call for this exact moment, matching the severity exactly.';
 
     try {
       const res = await fetch('/api/brain.js', {
@@ -481,7 +491,10 @@
       }
       const data = await res.json();
       const msg = (data.message || '').trim();
-      msgLine.textContent = (msg && msg.toUpperCase() !== 'SILENT') ? msg : "Nothing critical right now — holding steady.";
+      const fallback = severity === 'CRITICAL' ? "Box, box — we can't run this any longer."
+        : severity === 'CAUTION' ? "Keep an eye on it, we're getting close to the window."
+        : "Nothing critical right now — holding steady.";
+      msgLine.textContent = (msg && msg.toUpperCase() !== 'SILENT') ? msg : fallback;
       msgStatus.textContent = 'Ready';
     } catch (e) {
       if (mySeq !== reqSeq) return;
