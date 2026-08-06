@@ -191,10 +191,10 @@ def ask_ai(system, prompt, key, smart=False):
     try:
         r = requests.post(f'{GROQ_API}/chat/completions',
             headers={'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
-            json={'model': model, 'max_tokens': 300, 'reasoning_effort': 'low', 'temperature': 0.75,
+            json={'model': model, 'max_tokens': 150, 'reasoning_effort': 'low', 'temperature': 0.55,
                   'messages': [{'role': 'system', 'content': system},
                                 {'role': 'user',   'content': prompt}]},
-            timeout=10)
+            timeout=8)
         if r.status_code == 200:
             return r.json()['choices'][0]['message']['content'].strip()
     except Exception as e:
@@ -674,9 +674,10 @@ class PitWallDaemon:
     def sys_prompt(self):
         return (
             f"You are an elite FIA-licensed race engineer with 20 years in F1 and WEC. {self.style} "
-            "You receive LIVE telemetry. Speak in 1-2 sharp sentences like a real pit wall engineer on radio. "
+            "You receive LIVE telemetry. ONE short radio call, under 18 words, never more than one sentence. "
             "React to the data — if fuel is low, warn about pit window. If gap is closing, tell driver to push or defend. "
-            "Use fresh wording every time — never fall back on the same stock phrase twice in a row. Weave the actual numbers you were given into the sentence naturally instead of speaking in generic terms. Sound like one specific engineer with a voice, not a script. "
+            "The same telemetry should always get the same level of urgency — only the wording should vary, never the judgment. "
+            "Use fresh phrasing each time — avoid repeating the exact same sentence — but reference the actual numbers you were given naturally instead of speaking in generic terms. "
             "NEVER make up data. NEVER use tags like [neutral] or [serious]. "
             "If no critical update, reply exactly: SILENT"
         )
