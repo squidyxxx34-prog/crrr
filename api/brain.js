@@ -25,10 +25,10 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'openai/gpt-oss-120b',
-        max_tokens: 400,
+        model: 'openai/gpt-oss-20b',
+        max_tokens: 150,
         reasoning_effort: 'low',
-        temperature: 0.85,
+        temperature: 0.55,
         messages: [
           { role: 'system', content: system },
           { role: 'user', content: prompt },
