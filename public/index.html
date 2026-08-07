@@ -448,19 +448,39 @@
     gapVal.textContent = gap.toFixed(1) + 's';
     gapVal.className = 'ctrl-val ' + gapClass;
 
-    // Severity is decided HERE, in code, deterministically — never left to the model.
+    // Everything decided HERE, in code, deterministically — the AI never judges,
+    // it only phrases. Fixed priority order when multiple things are wrong at once:
+    // fuel > tyres > gap. This is what stops "pit" one time and "push" the next
+    // for the exact same numbers.
     let severity = 'NORMAL';
-    if (fuelClass === 'danger' || tyreClass === 'danger' || gapClass === 'danger') severity = 'CRITICAL';
-    else if (fuelClass === 'warn' || tyreClass === 'warn' || gapClass === 'warn') severity = 'CAUTION';
+    let action = 'SETTLE';
 
-    return { fuel, tyre, gap, severity };
+    if (fuelClass === 'danger')      { severity = 'CRITICAL'; action = 'PIT_NOW_FUEL'; }
+    else if (tyreClass === 'danger') { severity = 'CRITICAL'; action = 'PIT_NOW_TYRES'; }
+    else if (gapClass === 'danger')  { severity = 'CRITICAL'; action = 'PUSH_NOW'; }
+    else if (fuelClass === 'warn')   { severity = 'CAUTION';  action = 'MANAGE_FUEL'; }
+    else if (tyreClass === 'warn')   { severity = 'CAUTION';  action = 'MANAGE_TYRES'; }
+    else if (gapClass === 'warn')    { severity = 'CAUTION';  action = 'WATCH_GAP'; }
+
+    return { fuel, tyre, gap, severity, action };
   }
 
+  const ACTION_TEXT = {
+    PIT_NOW_FUEL:   'Tell the driver to box this lap — fuel will not last another lap.',
+    PIT_NOW_TYRES:  "Tell the driver to box this lap — the tyres are done.",
+    PUSH_NOW:       'Tell the driver to push now, the gap is closing fast.',
+    MANAGE_FUEL:    'Tell the driver to start saving fuel, the window is getting close.',
+    MANAGE_TYRES:   'Tell the driver to look after the tyres, they are wearing down.',
+    WATCH_GAP:      'Tell the driver the gap is shrinking — stay ready to defend.',
+    SETTLE:         'Tell the driver everything is fine — settle in and keep the pace.',
+  };
+
   const SYS_PROMPT = "You are a professional sim racing engineer on the pit wall. Calm, precise, direct. " +
-    "ONE short radio call, under 18 words. Never more than one sentence. Never make up data beyond what you're given. " +
-    "You will be told the exact severity level (CRITICAL, CAUTION, or NORMAL) — that judgment is already made for you, do not second-guess it or soften it. " +
-    "CRITICAL must sound urgent and call for action now. CAUTION should sound alert but controlled. NORMAL should sound calm and settled. " +
-    "Use fresh phrasing each time — avoid repeating the exact same sentence — but reference the actual numbers you were given naturally instead of speaking in generic terms.";
+    "ONE short radio instruction, under 14 words, one sentence. " +
+    "You will be told exactly what to tell the driver to do — that decision is already made, never change it or add a different instruction. " +
+    "Give the INSTRUCTION itself, not a readout of numbers — never say percentages or exact figures out loud, just what to do. " +
+    "Match the tone to the urgency: CRITICAL sounds urgent, CAUTION sounds alert but controlled, NORMAL sounds calm. " +
+    "Use fresh phrasing each time so it never sounds like a script, but the instruction itself must always be the exact one you were given.";
 
   let debounceTimer = null;
   let lastCallAt = 0;
@@ -468,14 +488,14 @@
   const MIN_GAP_MS = 1200;
 
   async function askRealEngineer(){
-    const { fuel, tyre, gap, severity } = readouts();
+    const { severity, action } = readouts();
     const mySeq = ++reqSeq;
 
     msgStatus.textContent = 'Engineer thinking...';
     msgStatus.classList.remove('speaking');
 
-    const prompt = 'Severity: ' + severity + '. Telemetry: fuel ' + fuel + '%, tyre health ' + tyre +
-      '%, gap to car ahead ' + gap.toFixed(1) + 's. Give your radio call for this exact moment, matching the severity exactly.';
+    const prompt = 'Severity: ' + severity + '. Instruction to give the driver: ' + ACTION_TEXT[action] +
+      ' Phrase this as a natural radio call — do not mention numbers or percentages.';
 
     try {
       const res = await fetch('/api/brain.js', {
@@ -491,9 +511,9 @@
       }
       const data = await res.json();
       const msg = (data.message || '').trim();
-      const fallback = severity === 'CRITICAL' ? "Box, box — we can't run this any longer."
-        : severity === 'CAUTION' ? "Keep an eye on it, we're getting close to the window."
-        : "Nothing critical right now — holding steady.";
+      const fallback = severity === 'CRITICAL' ? "Box, box — now."
+        : severity === 'CAUTION' ? "Keep an eye on it, window's getting close."
+        : "Holding steady — nothing to worry about.";
       msgLine.textContent = (msg && msg.toUpperCase() !== 'SILENT') ? msg : fallback;
       msgStatus.textContent = 'Ready';
     } catch (e) {
