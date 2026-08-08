@@ -207,6 +207,17 @@
 
     .acc-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line-soft)}
 
+    .wallet-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 0;border-bottom:1px solid var(--line-soft)}
+    .wallet-row:last-child{border-bottom:none}
+    .wallet-left{display:flex;align-items:center;gap:14px;min-width:0}
+    .wallet-logo{width:26px;height:26px;flex-shrink:0}
+    .wallet-name{font-size:14px;font-weight:500;color:var(--paper)}
+    .wallet-addr{font-family:var(--mono);font-size:11px;color:var(--dim2);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .wallet-btn{background:transparent;border:1px solid var(--line);color:var(--paper);font-family:var(--mono);
+      font-size:11px;letter-spacing:1px;padding:9px 16px;border-radius:var(--r-pill);cursor:pointer;flex-shrink:0;transition:border-color .2s}
+    .wallet-btn:hover{border-color:var(--gold-soft)}
+    .wallet-btn.connected{border-color:var(--green);color:var(--green)}
+
     /* GAMIFICATION */
     .status-chip{display:flex;align-items:center;gap:10px;padding:12px 18px;border:1px solid var(--line);
       border-radius:var(--r-pill);margin-bottom:24px;cursor:pointer;transition:border-color .15s;width:fit-content;max-width:100%}
@@ -500,6 +511,55 @@
               <button onclick="gateCheckout('team')" style="background:transparent;border:1px solid var(--line);color:var(--paper)">TEAM — €39/mo →</button>
             </div>
           </div>
+
+          <div class="dash-card">
+            <div class="dash-card-kicker">wallets</div>
+            <div class="dash-card-title" style="margin-bottom:16px">Connect a wallet</div>
+
+            <div class="wallet-row">
+              <div class="wallet-left">
+                <svg class="wallet-logo" viewBox="0 0 256 417" xmlns="http://www.w3.org/2000/svg">
+                  <path fill="#8A92B2" d="M127.9611 0 125.1661 9.5v275.6685l2.795 2.7900 127.962-75.6395z"/>
+                  <path fill="#62688F" d="M127.962 0 0 212.32l127.962 75.6395V154.158z"/>
+                  <path fill="#454A75" d="M127.9611 312.1866 126.386 314.1075v98.6835l1.5751 4.6785L255.998 236.5865z"/>
+                  <path fill="#8A92B2" d="M127.962 415.4165V312.1866L0 236.5865z"/>
+                  <path fill="#62688F" d="M127.9611 287.9584 255.9231 212.32 127.9611 154.158z"/>
+                  <path fill="#454A75" d="M0 212.32 127.962 287.9584V154.158z"/>
+                </svg>
+                <div>
+                  <div class="wallet-name">Ethereum</div>
+                  <div class="wallet-addr" id="ethAddr">Not connected</div>
+                </div>
+              </div>
+              <button class="wallet-btn" id="ethBtn" onclick="connectEthereum()">Connect</button>
+            </div>
+
+            <div class="wallet-row">
+              <div class="wallet-left">
+                <svg class="wallet-logo" viewBox="0 0 397.7 311.7" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="solA" x1="360.9" y1="351.5" x2="141.2" y2="-69.3" gradientUnits="userSpaceOnUse">
+                      <stop offset="0" stop-color="#00FFA3"/><stop offset="1" stop-color="#DC1FFF"/>
+                    </linearGradient>
+                    <linearGradient id="solB" x1="264.8" y1="401.6" x2="45.2" y2="-19.3" gradientUnits="userSpaceOnUse">
+                      <stop offset="0" stop-color="#00FFA3"/><stop offset="1" stop-color="#DC1FFF"/>
+                    </linearGradient>
+                    <linearGradient id="solC" x1="312.5" y1="376.7" x2="92.8" y2="-44.1" gradientUnits="userSpaceOnUse">
+                      <stop offset="0" stop-color="#00FFA3"/><stop offset="1" stop-color="#DC1FFF"/>
+                    </linearGradient>
+                  </defs>
+                  <path fill="url(#solA)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1z"/>
+                  <path fill="url(#solB)" d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1z"/>
+                  <path fill="url(#solC)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1z"/>
+                </svg>
+                <div>
+                  <div class="wallet-name">Solana</div>
+                  <div class="wallet-addr" id="solAddr">Not connected</div>
+                </div>
+              </div>
+              <button class="wallet-btn" id="solBtn" onclick="connectSolana()">Connect</button>
+            </div>
+          </div>
         </section>
 
       </div>
@@ -524,7 +584,7 @@ try {
   document.body.innerHTML = '<div style="color:#e28a83;font-family:monospace;padding:40px;background:#0a0a0a;min-height:100vh">SDK Error: ' + e.message + '</div>';
 }
 
-const ST = { user:null, plan:'free', sessions:0 };
+const ST = { user:null, plan:'free', sessions:0, ethWallet:null, solWallet:null };
 
 const show = function(id) {
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
@@ -587,7 +647,7 @@ async function boot(user) {
 
 async function loadPlan(user) {
   try {
-    const res = await sb.from('profiles').select('plan,sessions_this_month,sessions_reset_at,total_sessions,current_streak,best_streak').eq('id', user.id).single();
+    const res = await sb.from('profiles').select('plan,sessions_this_month,sessions_reset_at,total_sessions,current_streak,best_streak,eth_wallet,sol_wallet').eq('id', user.id).single();
     const data = res.data;
     if (!data) {
       await sb.from('profiles').upsert({ id: user.id, plan: 'free', sessions_this_month: 0, sessions_reset_at: new Date().toISOString() }, { onConflict: 'id' });
@@ -604,6 +664,8 @@ async function loadPlan(user) {
       ST.totalSessions = data.total_sessions || 0;
       ST.streak = data.current_streak || 0;
       ST.bestStreak = data.best_streak || 0;
+      ST.ethWallet = data.eth_wallet || null;
+      ST.solWallet = data.sol_wallet || null;
     }
   } catch (e) { ST.plan = 'free'; ST.sessions = 0; ST.totalSessions = 0; ST.streak = 0; ST.bestStreak = 0; }
 }
@@ -635,6 +697,7 @@ function gotoDash() {
   loadTranscripts();
   renderRank();
   renderBadges();
+  renderWallets();
   if (ST.plan === 'team') { loadTeam(); loadLeaderboard(); }
 }
 
@@ -958,6 +1021,69 @@ async function loadLeaderboard() {
   } catch (e) {
     list.innerHTML = '<div class="lb-locked">Leaderboard unavailable.</div>';
   }
+}
+
+// ══ WALLETS ══
+function truncateAddr(a) {
+  return a ? (a.slice(0, 6) + '...' + a.slice(-4)) : '';
+}
+
+function renderWallets() {
+  const ethAddrEl = document.getElementById('ethAddr');
+  const ethBtnEl = document.getElementById('ethBtn');
+  if (ST.ethWallet) {
+    ethAddrEl.textContent = truncateAddr(ST.ethWallet);
+    ethBtnEl.textContent = 'Connected';
+    ethBtnEl.classList.add('connected');
+  } else {
+    ethAddrEl.textContent = 'Not connected';
+    ethBtnEl.textContent = 'Connect';
+    ethBtnEl.classList.remove('connected');
+  }
+
+  const solAddrEl = document.getElementById('solAddr');
+  const solBtnEl = document.getElementById('solBtn');
+  if (ST.solWallet) {
+    solAddrEl.textContent = truncateAddr(ST.solWallet);
+    solBtnEl.textContent = 'Connected';
+    solBtnEl.classList.add('connected');
+  } else {
+    solAddrEl.textContent = 'Not connected';
+    solBtnEl.textContent = 'Connect';
+    solBtnEl.classList.remove('connected');
+  }
+}
+
+async function connectEthereum() {
+  if (ST.ethWallet) return; // already connected, nothing to do
+  if (!window.ethereum) {
+    alert('No Ethereum wallet found. Install MetaMask or another compatible wallet extension.');
+    return;
+  }
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    const addr = accounts && accounts[0];
+    if (!addr) return;
+    ST.ethWallet = addr;
+    if (ST.user) await sb.from('profiles').update({ eth_wallet: addr }).eq('id', ST.user.id);
+    renderWallets();
+  } catch (e) { console.warn('Ethereum connect:', e); }
+}
+
+async function connectSolana() {
+  if (ST.solWallet) return; // already connected, nothing to do
+  if (!window.solana || !window.solana.isPhantom) {
+    alert('No Solana wallet found. Install Phantom or another compatible wallet extension.');
+    return;
+  }
+  try {
+    const resp = await window.solana.connect();
+    const addr = resp && resp.publicKey ? resp.publicKey.toString() : null;
+    if (!addr) return;
+    ST.solWallet = addr;
+    if (ST.user) await sb.from('profiles').update({ sol_wallet: addr }).eq('id', ST.user.id);
+    renderWallets();
+  } catch (e) { console.warn('Solana connect:', e); }
 }
 
 function esc(s) {
